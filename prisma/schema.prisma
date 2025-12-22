@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id
+  name          String
+  email         String
+  emailVerified Boolean    @default(false)
+  image         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  millData      MillData[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model MillData {
+  id     String @id @default(cuid())
+  userId String
+
+  date DateTime @db.Date
+
+  millCredit Float @default(0)
+
+  flourWeight Float @default(0)
+  flourRs     Float @default(0)
+
+  oilWeight Float @default(0)
+  oilRs     Float @default(0)
+
+  khariWeight Float @default(0)
+  khariRs     Float @default(0)
+
+  totalCredit Float @default(0)
+
+  sarsoWeight Float @default(0)
+  sarsoRs     Float @default(0)
+
+  gehumWeight Float @default(0)
+  gehumRs     Float @default(0)
+
+  staff1Rs         Float   @default(0)
+  staff2Rs         Float   @default(0)
+  staffDescription String?
+
+  millDebit       Float   @default(0)
+  millDescription String?
+
+  homeDebit       Float   @default(0)
+  homeDescription String?
+
+  totalDebit Float @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("mill_data")
+}
