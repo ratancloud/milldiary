@@ -40,6 +40,7 @@ import StatCard2 from "@/components/millData/StatCard2";
 import StatCard from "@/components/millData/StatCard";
 import StatItem from "@/components/millData/StatItem";
 import TableComponent from "@/components/millData/TableComponent";
+import { handleExportToExcel } from "@/lib/handleExportToExcel";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: String(i + 1),
@@ -381,6 +382,14 @@ function MillDataContent() {
 
               {/* Export */}
               <Button
+                onClick={() =>
+                  handleExportToExcel({
+                    data: rows,
+                    totals: total,
+                    year: year,
+                    month: month,
+                  })
+                }
               >
                 <DownloadIcon className="w-4 h-4" />
                 Export
