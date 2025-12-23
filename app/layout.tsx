@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   description: "Inventory and mill data management system",
   applicationName: "Mill Diary",
-  // manifest: "/manifest.webmanifest",
+  manifest: "/manifest.webmanifest",
 };
 
 
