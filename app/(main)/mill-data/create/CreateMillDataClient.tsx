@@ -35,7 +35,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 
 export default function CreateMillDataClient() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   const {
@@ -70,7 +70,7 @@ export default function CreateMillDataClient() {
     },
   });
 
-// Safe field watching (compiler-safe) ---> 
+  // Safe field watching (compiler-safe) --->
   const [
     millCredit,
     flourRs,
@@ -179,9 +179,7 @@ export default function CreateMillDataClient() {
               className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm font-medium transition-colors hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <CalendarIcon className="h-4 w-4 text-primary" />
-              <span>
-                {displayDate}
-              </span>
+              <span>{displayDate}</span>
             </button>
           </PopoverTrigger>
 
@@ -201,7 +199,7 @@ export default function CreateMillDataClient() {
                 const istDate = `${year}-${month}-${day}`;
 
                 setValue("date", istDate, { shouldDirty: true });
-                setOpen(false)
+                setOpen(false);
               }}
             />
           </PopoverContent>
@@ -258,28 +256,26 @@ export default function CreateMillDataClient() {
               errors={errors}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <NumberInput label="Staff 1 Rs" error={errors.staff1Rs}>
-                <Input
-                  id="staff1Rs"
-                  type="number"
-                  {...register("staff1Rs", { valueAsNumber: true })}
-                />
-              </NumberInput>
+            <NumberInput label="Staff 1 Rs" error={errors.staff1Rs}>
+              <Input
+                id="staff1Rs"
+                type="number"
+                {...register("staff1Rs", { valueAsNumber: true })}
+              />
+            </NumberInput>
 
-              <NumberInput label="Staff 2 Rs" error={errors.staff2Rs}>
-                <Input
-                  id="staff2Rs"
-                  type="number"
-                  {...register("staff2Rs", { valueAsNumber: true })}
-                />
-              </NumberInput>
-            </div>
+            <NumberInput label="Staff 2 Rs" error={errors.staff2Rs}>
+              <Input
+                id="staff2Rs"
+                type="number"
+                {...register("staff2Rs", { valueAsNumber: true })}
+              />
+            </NumberInput>
 
             <div className="space-y-1 md:col-span-2">
               <label className="text-sm font-medium">Staff Selection</label>
               <Select onValueChange={(v) => setValue("staffDescription", v)}>
-                <SelectTrigger id="staffDescription">
+                <SelectTrigger id="staffDescription" className="w-full">
                   <SelectValue placeholder="Select staff" />
                 </SelectTrigger>
                 <SelectContent>
@@ -289,26 +285,28 @@ export default function CreateMillDataClient() {
                 </SelectContent>
               </Select>
             </div>
-
-            <NumberInput label="Mill Debit" error={errors.millDebit}>
-              <Input
-                id="millDebit"
-                type="number"
-                {...register("millDebit", { valueAsNumber: true })}
-              />
-            </NumberInput>
+            <div className="space-y-1 md:col-span-2">
+              <NumberInput label="Mill Debit" error={errors.millDebit}>
+                <Input
+                  id="millDebit"
+                  type="number"
+                  {...register("millDebit", { valueAsNumber: true })}
+                />
+              </NumberInput>
+            </div>
 
             <TextareaBlock label="Mill Description">
               <Textarea id="millDescription" {...register("millDescription")} />
             </TextareaBlock>
-
-            <NumberInput label="Home Debit" error={errors.homeDebit}>
-              <Input
-                id="homeDebit"
-                type="number"
-                {...register("homeDebit", { valueAsNumber: true })}
-              />
-            </NumberInput>
+            <div className="space-y-1 md:col-span-2">
+              <NumberInput label="Home Debit" error={errors.homeDebit}>
+                <Input
+                  id="homeDebit"
+                  type="number"
+                  {...register("homeDebit", { valueAsNumber: true })}
+                />
+              </NumberInput>
+            </div>
 
             <TextareaBlock label="Home Description">
               <Textarea id="homeDescription" {...register("homeDescription")} />

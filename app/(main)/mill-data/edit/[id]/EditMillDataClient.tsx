@@ -62,7 +62,7 @@ export default function EditMillDataClient() {
         const json = await res.json();
         if (!res.ok || !json.success) {
           toast.error(json.message || "Failed to load data");
-          router.replace('/mill-data')
+          router.replace("/mill-data");
           return;
         }
         const data: MillData = json.data;
@@ -182,7 +182,10 @@ export default function EditMillDataClient() {
           Edit Entry
         </h1>
         {date && (
-          <div className="flex items-center gap-2" onClick={() => toast.error("Date cannot be changed")}>
+          <div
+            className="flex items-center gap-2"
+            onClick={() => toast.error("Date cannot be changed")}
+          >
             <div className="flex items-center justify-center gap-2 rounded-md border bg-muted hover:bg-primary/20 px-3 py-2 text-sm font-medium transition-colors">
               <Calendar className="h-4 w-4 text-primary" />
               <span className="tabular-nums">{formateIndDate(date)}</span>
@@ -268,7 +271,7 @@ export default function EditMillDataClient() {
                   setValue("staffDescription", v, { shouldDirty: true })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select staff" />
                 </SelectTrigger>
                 <SelectContent>
@@ -279,27 +282,31 @@ export default function EditMillDataClient() {
               </Select>
             </div>
 
-            <NumberInput label="Mill Debit" error={errors.millDebit}>
-              <Input
-                id="millDebit"
-                type="number"
-                onWheel={(e) => e.currentTarget.blur()}
-                {...register("millDebit", { valueAsNumber: true })}
-              />
-            </NumberInput>
+            <div className="space-y-1 md:col-span-2">
+              <NumberInput label="Mill Debit" error={errors.millDebit}>
+                <Input
+                  id="millDebit"
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("millDebit", { valueAsNumber: true })}
+                />
+              </NumberInput>
+            </div>
 
             <TextareaBlock label="Mill Description">
               <Textarea id="millDescription" {...register("millDescription")} />
             </TextareaBlock>
 
-            <NumberInput label="Home Debit" error={errors.homeDebit}>
-              <Input
-                id="homeDebit"
-                type="number"
-                onWheel={(e) => e.currentTarget.blur()}
-                {...register("homeDebit", { valueAsNumber: true })}
-              />
-            </NumberInput>
+            <div className="space-y-1 md:col-span-2">
+              <NumberInput label="Home Debit" error={errors.homeDebit}>
+                <Input
+                  id="homeDebit"
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("homeDebit", { valueAsNumber: true })}
+                />
+              </NumberInput>
+            </div>
 
             <TextareaBlock label="Home Description">
               <Textarea id="homeDescription" {...register("homeDescription")} />

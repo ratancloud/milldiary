@@ -27,7 +27,7 @@ const StatItem = ({
       </span>
       {sub && (
         <span className="text-sm text-muted-foreground tabular-nums">
-          {formatKg(sub)}kg
+          {formatKg(sub)} Kg
         </span>
       )}
     </div>
