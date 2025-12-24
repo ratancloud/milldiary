@@ -33,9 +33,11 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function CreateMillDataClient() {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const router = useRouter();
 
   const {
@@ -326,15 +328,42 @@ export default function CreateMillDataClient() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit(onSubmit, onInvalid)}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Create Entry
-            </Button>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Create Entry
+                </Button>
+              </AlertDialogTrigger>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to create this entry? Please review
+                    the details before proceeding.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isSubmitting}>
+                    Cancel
+                  </AlertDialogCancel>
+
+                  <AlertDialogAction
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setConfirmOpen(false);
+                      handleSubmit(onSubmit, onInvalid)();
+                    }}
+                  >
+                    Yes, Create
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>

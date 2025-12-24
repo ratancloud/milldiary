@@ -30,6 +30,7 @@ import { NumberInput } from "@/components/millDataForm/NumberInput";
 import { KgRs } from "@/components/millDataForm/KgRs";
 import { TextareaBlock } from "@/components/millDataForm/TextareaBlock";
 import { ReadOnly } from "@/components/millDataForm/ReadOnly";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function EditMillDataClient() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,7 @@ export default function EditMillDataClient() {
 
   const [date, setDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const {
     register,
@@ -322,15 +324,45 @@ export default function EditMillDataClient() {
             <Button variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit(onSubmit, onInvalid)}
-              disabled={isSubmitting || Object.keys(dirtyFields).length === 0}
-            >
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Save Changes
-            </Button>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  disabled={
+                    isSubmitting || Object.keys(dirtyFields).length === 0
+                  }
+                >
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
+              </AlertDialogTrigger>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Update</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to save these changes? This action
+                    cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isSubmitting}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setConfirmOpen(false);
+                      handleSubmit(onSubmit, onInvalid)();
+                    }}
+                  >
+                    Yes, Save
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>
