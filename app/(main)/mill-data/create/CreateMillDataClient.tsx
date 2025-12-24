@@ -256,7 +256,7 @@ export default function CreateMillDataClient() {
               errors={errors}
             />
 
-            <NumberInput label="Staff 1 Rs" error={errors.staff1Rs}>
+            <NumberInput label="Bhim Rs" error={errors.staff1Rs}>
               <Input
                 id="staff1Rs"
                 type="number"
@@ -264,7 +264,7 @@ export default function CreateMillDataClient() {
               />
             </NumberInput>
 
-            <NumberInput label="Staff 2 Rs" error={errors.staff2Rs}>
+            <NumberInput label="Viswa Rs" error={errors.staff2Rs}>
               <Input
                 id="staff2Rs"
                 type="number"

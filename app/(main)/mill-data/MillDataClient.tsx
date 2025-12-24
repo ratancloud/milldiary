@@ -306,14 +306,14 @@ function MillDataContent() {
           </div>
           <div className="grid md:grid-cols-2 gap-2">
             <StatItem
-              label="Staff1"
+              label="Bhim"
               value={total.staff1Rs}
               statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
               colorClass="text-red-600 dark:text-red-400"
               isSensitive={isSensitive}
             />
             <StatItem
-              label="Staff2"
+              label="Viswa"
               value={total.staff2Rs}
               statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
               colorClass="text-red-600 dark:text-red-400"

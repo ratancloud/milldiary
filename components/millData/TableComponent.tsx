@@ -48,8 +48,8 @@ const TableComponent = ({ loading, isPending, filteredRows }: TableProps) => {
             <TableHead className={`${head} text-right`}>Sarso</TableHead>
             <TableHead className={`${head} text-right`}>Gehum</TableHead>
 
-            <TableHead className={`${head} text-right`}>Staff1</TableHead>
-            <TableHead className={`${head} text-right`}>Staff1</TableHead>
+            <TableHead className={`${head} text-right`}>Bhim</TableHead>
+            <TableHead className={`${head} text-right`}>Viswa</TableHead>
             <TableHead className={head}>Staff Desc</TableHead>
             <TableHead className={`${head} text-right`}>Mill Dr</TableHead>
             <TableHead className={head}>Mill Desc</TableHead>
