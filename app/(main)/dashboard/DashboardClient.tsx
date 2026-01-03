@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,7 +100,7 @@ export default function DashboardPage() {
               value={String(year)}
               onValueChange={(val) => setYear(Number(val))}
             >
-              <SelectTrigger className="border-none outline-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent shadow-none w-[80px]">
+              <SelectTrigger className="border-none outline-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent shadow-none w-20">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -180,13 +181,13 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* icome chats  */}
-      
-
-
-      {/* expanse charts */}
-
-
+      {/* Add Charts Section below SummaryCards */}
+      {dashboardData && (
+        <DashboardCharts 
+          creditData={dashboardData.monthlyCredit} 
+          debitData={dashboardData.monthlyDebit} 
+        />
+      )}
     </div>
   );
 }
