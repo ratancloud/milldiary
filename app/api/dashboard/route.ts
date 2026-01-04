@@ -1,7 +1,7 @@
 import { apiResponseError, apiResponseSuccess } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { MonthlyMillCredit, MonthlyMillDebit, YearSummaryCard } from "@/types/dashboard";
+import { MonthlyHomeDebit, MonthlyMillCredit, MonthlyMillDebit, YearSummaryCard } from "@/types/dashboard";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -31,6 +31,7 @@ const initMonth = (month: number) => ({
   staff1Cost: 0,
   staff2Cost: 0,
   millDebit: 0,
+  homeDebit: 0,
 })
 
 /* ---------------- API ---------------- */
@@ -101,6 +102,7 @@ export async function GET(req: NextRequest) {
       m.staff1Cost += row.staff1Rs
       m.staff2Cost += row.staff2Rs
       m.millDebit += row.millDebit
+      m.homeDebit += row.homeDebit
 
       /* ---- Year Totals ---- */
       totalCredit += row.totalCredit
@@ -118,7 +120,8 @@ export async function GET(req: NextRequest) {
 
     /* ---------- Monthly Arrays ---------- */
     const monthlyCredit: MonthlyMillCredit[] = []
-    const monthlyDebit: MonthlyMillDebit[] = []
+    const monthlyMillDebit: MonthlyMillDebit[] = []
+    const monthlyHomeDebit: MonthlyHomeDebit[] = []
 
     for (let month = 1; month <= 12; month++) {
       const m = monthMap.get(month) ?? initMonth(month)
@@ -143,7 +146,7 @@ export async function GET(req: NextRequest) {
         m.staff2Cost +
         m.millDebit
 
-      monthlyDebit.push({
+      monthlyMillDebit.push({
         month,
         monthLabel: m.monthLabel,
         gehumRs: m.gehumRs,
@@ -154,6 +157,12 @@ export async function GET(req: NextRequest) {
         staff2Cost: m.staff2Cost,
         millDebit: m.millDebit,
         totalMillDebit,
+      })
+
+      monthlyHomeDebit.push({
+        month,
+        monthLabel: m.monthLabel,
+        homeDebit: m.homeDebit
       })
     }
 
@@ -172,7 +181,8 @@ export async function GET(req: NextRequest) {
     return apiResponseSuccess({
       summary,
       monthlyCredit,
-      monthlyDebit,
+      monthlyMillDebit,
+      monthlyHomeDebit
     })
   } catch (error) {
     console.error("[DASHBOARD_API_ERROR]", error)

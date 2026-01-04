@@ -22,12 +22,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MonthlyMillCredit, MonthlyMillDebit } from "@/types/dashboard";
+import {
+  MonthlyHomeDebit,
+  MonthlyMillCredit,
+  MonthlyMillDebit,
+} from "@/types/dashboard";
 import { formatRs } from "@/lib/helper";
 
 interface DashboardChartsProps {
   creditData: MonthlyMillCredit[];
-  debitData: MonthlyMillDebit[];
+  debitMillData: MonthlyMillDebit[];
+  debitHomeData: MonthlyHomeDebit[];
 }
 
 // --- Configuration & Constants ---
@@ -35,16 +40,16 @@ interface DashboardChartsProps {
 // Centralized color palette for easy tweaking
 const CHART_COLORS = {
   flour: "#3b82f6", // blue-500
-  oil: "#f59e0b",   // amber-500
+  oil: "#f59e0b", // amber-500
   khari: "#8b5cf6", // violet-500
-  millCr: "#10b981",// emerald-500
+  millCr: "#10b981", // emerald-500
   wheat: "#d97706", // amber-600
-  mustard: "#eab308",// yellow-500
-  bhim: "#ec4899",  // pink-500
+  mustard: "#eab308", // yellow-500
+  bhim: "#ec4899", // pink-500
   viswa: "#be185d", // rose-700
-  millDr: "#64748b",// slate-500
+  millDr: "#64748b", // slate-500
   incomeLine: "#2563eb", // blue-600
-  lossBar: "#ef4444",    // red-500
+  lossBar: "#ef4444", // red-500
 };
 
 // Map "Money" keys to their corresponding "Weight" keys
@@ -59,10 +64,9 @@ const WEIGHT_MAP: Record<
   sarsoRs: "sarsoWeight",
 };
 
-// Standardized styles for Axis text to ensure they match the theme
 const AXIS_STYLE = {
   fontSize: 10,
-  fill: "hsl(var(--muted-foreground))",
+  fill: "#888888",
 };
 
 // --- 1. Overview Tooltip ---
@@ -75,7 +79,10 @@ const OverviewTooltip = ({ active, payload, label }: any) => {
         </p>
         <div className="flex flex-col gap-1.5">
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center justify-between gap-4">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4"
+            >
               <div className="flex items-center gap-2">
                 <div
                   className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/20"
@@ -148,11 +155,12 @@ const BreakdownTooltip = ({ active, payload, label }: any) => {
 
 export const DashboardCharts = ({
   creditData,
-  debitData,
+  debitMillData,
+  debitHomeData,
 }: DashboardChartsProps) => {
   const overviewData = useMemo(() => {
     return creditData.map((creditItem) => {
-      const debitItem = debitData.find((d) => d.month === creditItem.month);
+      const debitItem = debitMillData.find((d) => d.month === creditItem.month);
 
       const totalCredit = creditItem.totalCredit;
       const MillDebit = debitItem?.totalMillDebit || 0;
@@ -165,7 +173,7 @@ export const DashboardCharts = ({
         Income: Income,
       };
     });
-  }, [creditData, debitData]);
+  }, [creditData, debitMillData]);
 
   return (
     <div className="space-y-6">
@@ -173,9 +181,7 @@ export const DashboardCharts = ({
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Financial Overview</CardTitle>
-          <CardDescription>
-            Credit (Green) vs Debit (Red) with Net Saving (Blue)
-          </CardDescription>
+          <CardDescription>Credit vs Debit with Income</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-75 sm:h-100 w-full">
@@ -185,9 +191,23 @@ export const DashboardCharts = ({
                 margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
               >
                 <defs>
-                  <linearGradient id="creditGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.millCr} stopOpacity={0.2} />
-                    <stop offset="95%" stopColor={CHART_COLORS.millCr} stopOpacity={0} />
+                  <linearGradient
+                    id="creditGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor={CHART_COLORS.millCr}
+                      stopOpacity={0.2}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={CHART_COLORS.millCr}
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
 
@@ -195,7 +215,7 @@ export const DashboardCharts = ({
                   strokeDasharray="3 3"
                   vertical={false}
                   stroke="hsl(var(--border))"
-                  strokeOpacity={0.5} 
+                  strokeOpacity={0.5}
                 />
 
                 <XAxis
@@ -219,13 +239,13 @@ export const DashboardCharts = ({
                   content={<OverviewTooltip />}
                   cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
                 />
-                
+
                 {/* Fixed: Added color to Legend wrapperStyle for dark mode visibility */}
                 <Legend
                   wrapperStyle={{
                     paddingTop: "20px",
                     fontSize: "12px",
-                    color: "hsl(var(--foreground))", 
+                    color: "hsl(var(--foreground))",
                   }}
                   iconType="circle"
                 />
@@ -370,7 +390,7 @@ export const DashboardCharts = ({
               <div className="h-75 sm:h-87.5 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={debitData}
+                    data={debitMillData}
                     margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
                   >
                     <CartesianGrid
@@ -445,6 +465,75 @@ export const DashboardCharts = ({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Home debit */}
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle>Home Debit</CardTitle>
+          <CardDescription>Overview of home expense</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-75 sm:h-100 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={debitHomeData}
+                margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
+              >
+                {/* Removed unused <defs> gradient to clean up code */}
+
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="hsl(var(--border))"
+                  strokeOpacity={0.5}
+                />
+
+                <XAxis
+                  dataKey="monthLabel"
+                  axisLine={false}
+                  tickLine={false}
+                  // Applied the safe neutral color directly here
+                  tick={{ fill: "#71717a", fontSize: 10 }}
+                  dy={10}
+                  interval="preserveStartEnd"
+                />
+
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  // Applied the safe neutral color directly here
+                  tick={{ fill: "#71717a", fontSize: 10 }}
+                  tickFormatter={(value) => `₹${value / 1000}k`}
+                  width={40}
+                />
+
+                <Tooltip
+                  content={<OverviewTooltip />}
+                  cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
+                />
+
+                <Legend
+                  wrapperStyle={{
+                    paddingTop: "20px",
+                    fontSize: "12px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  iconType="circle"
+                />
+
+                <Bar
+                  dataKey="homeDebit"
+                  name="Home Debit"
+                  fill={CHART_COLORS.lossBar}
+                  radius={[4, 4, 0, 0]}
+                  barSize={20}
+                  fillOpacity={0.9}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

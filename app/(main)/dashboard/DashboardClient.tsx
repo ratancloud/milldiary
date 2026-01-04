@@ -2,6 +2,7 @@
 
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import { DashboardChartsSkeleton } from "@/components/skelton/DashboardChartsSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -95,24 +96,22 @@ function DashboardContent() {
         </h1>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center rounded-md border bg-muted hover:bg-primary/20 pl-3 text-sm font-medium transition-colors">
-            <CalendarIcon className="text-primary size-5" />
-            <Select
-              value={String(year)}
-              onValueChange={(val) => setYear(Number(val))}
-            >
-              <SelectTrigger className="border-none outline-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent shadow-none w-20">
-                <SelectValue placeholder="Year" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CalendarIcon className="text-primary size-5" />
+          <Select
+            value={String(year)}
+            onValueChange={(val) => setYear(Number(val))}
+          >
+            <SelectTrigger className="ring-0">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Button
             variant="outline"
@@ -122,16 +121,16 @@ function DashboardContent() {
             className="bg-muted hover:bg-primary/20"
           >
             {isSensitive ? (
-              <EyeOff className="h-4 w-4 text-primary" />
-            ) : (
               <Eye className="h-4 w-4 text-primary" />
+            ) : (
+              <EyeOff className="h-4 w-4 text-primary" />
             )}
           </Button>
         </div>
       </div>
-      
+
       {/* Yearly summary card  */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6">
         <SummaryCards
           label="Total Credit"
           icon={TrendingUp}
@@ -183,11 +182,14 @@ function DashboardContent() {
       </div>
 
       {/* Add Charts Section below SummaryCards */}
-      {dashboardData && (
-        <DashboardCharts 
-          creditData={dashboardData.monthlyCredit} 
-          debitData={dashboardData.monthlyDebit} 
+      {dashboardData ? (
+        <DashboardCharts
+          creditData={dashboardData.monthlyCredit}
+          debitMillData={dashboardData.monthlyMillDebit}
+          debitHomeData={dashboardData.monthlyHomeDebit}
         />
+      ): (
+        <DashboardChartsSkeleton />
       )}
     </div>
   );
@@ -195,11 +197,13 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );

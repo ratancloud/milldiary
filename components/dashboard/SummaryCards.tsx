@@ -61,7 +61,7 @@ export const SummaryCards = ({
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-4 border rounded-md transition-all hover:shadow-sm",
+        "flex items-center justify-between p-4 border rounded-md transition-all hover:shadow-sm duration-200 hover:scale-102",
         theme.wrapper
       )}
     >
@@ -69,9 +69,9 @@ export const SummaryCards = ({
         <p className="text-base font-medium text-muted-foreground/80">{label}</p>
         
         {isLoading ? (
-          <Skeleton className="h-7 w-24 bg-foreground/10" />
+          <Skeleton className="h-5 w-24 sm:w-30 bg-foreground/10" />
         ) : (
-          <p className="text-2xl leading-tight font-bold tracking-tight">
+          <p className="text-lg sm:text-xl tabular-nums leading-tight font-bold">
              ₹{isSensitive ? "••••••" : value}
           </p>
         )}

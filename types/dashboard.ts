@@ -43,8 +43,15 @@ export interface MonthlyMillDebit {
   totalMillDebit: number;
 }
 
+export interface MonthlyHomeDebit {
+  month: number;
+  monthLabel: string;
+  homeDebit: number;
+}
+
 export interface MillDashboardResponse {
   summary: YearSummaryCard;
   monthlyCredit: MonthlyMillCredit[];
-  monthlyDebit: MonthlyMillDebit[];
+  monthlyMillDebit: MonthlyMillDebit[];
+  monthlyHomeDebit: MonthlyHomeDebit[];
 }
