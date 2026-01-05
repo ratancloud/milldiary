@@ -13,7 +13,23 @@ import {
   ComposedChart,
   Line,
   Area,
+  TooltipProps,
 } from "recharts";
+import {
+  NameType,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent";
+import {
+  Wheat,
+  Droplets,
+  Package,
+  Building2,
+  ShoppingBasket,
+  Sprout,
+  Users,
+  Home,
+  LucideIcon,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -29,15 +45,18 @@ import {
 } from "@/types/dashboard";
 import { formatRs } from "@/lib/helper";
 
+// --- Types ---
+
 interface DashboardChartsProps {
   creditData: MonthlyMillCredit[];
   debitMillData: MonthlyMillDebit[];
   debitHomeData: MonthlyHomeDebit[];
 }
 
-// --- Configuration & Constants ---
+type ChartDataPoint = MonthlyMillCredit | MonthlyMillDebit | MonthlyHomeDebit;
 
-// Centralized color palette for easy tweaking
+// --- Configuration ---
+
 const CHART_COLORS = {
   flour: "#3b82f6", // blue-500
   oil: "#f59e0b", // amber-500
@@ -50,12 +69,11 @@ const CHART_COLORS = {
   millDr: "#64748b", // slate-500
   incomeLine: "#2563eb", // blue-600
   lossBar: "#ef4444", // red-500
-};
+} as const;
 
 // Map "Money" keys to their corresponding "Weight" keys
-const WEIGHT_MAP: Record<
-  string,
-  keyof MonthlyMillCredit | keyof MonthlyMillDebit
+const WEIGHT_MAP: Partial<
+  Record<string, keyof MonthlyMillCredit | keyof MonthlyMillDebit>
 > = {
   flourRs: "flourWeight",
   oilRs: "oilWeight",
@@ -69,31 +87,37 @@ const AXIS_STYLE = {
   fill: "#888888",
 };
 
-// --- 1. Overview Tooltip ---
-const OverviewTooltip = ({ active, payload, label }: any) => {
+// --- Components ---
+
+// 1. Overview Tooltip (Strictly Typed)
+const OverviewTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-md border bg-popover px-3 py-2 text-sm shadow-md animate-in fade-in-0 zoom-in-95 max-w-50">
-        <p className="mb-2 font-semibold text-foreground border-b border-border pb-1">
+      <div className="rounded-lg border bg-popover/95 px-4 py-3 text-sm shadow-xl backdrop-blur-sm animate-in fade-in-0 zoom-in-95 min-w-50">
+        <p className="mb-2 font-semibold text-foreground border-b border-border/50 pb-2">
           {label}
         </p>
-        <div className="flex flex-col gap-1.5">
-          {payload.map((entry: any, index: number) => (
+        <div className="flex flex-col gap-2">
+          {payload.map((entry, index) => (
             <div
               key={index}
               className="flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-2">
                 <div
-                  className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/20"
+                  className="h-2.5 w-2.5 rounded-full ring-2 ring-background"
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-muted-foreground capitalize text-xs sm:text-sm">
+                <span className="text-muted-foreground capitalize font-medium">
                   {entry.name}
                 </span>
               </div>
-              <span className="font-mono font-medium text-foreground text-xs sm:text-sm">
-                {formatRs(entry.value)}
+              <span className="font-mono font-bold text-foreground">
+                {formatRs(Number(entry.value))}
               </span>
             </div>
           ))}
@@ -104,26 +128,32 @@ const OverviewTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// --- 2. Breakdown Tooltip ---
-const BreakdownTooltip = ({ active, payload, label }: any) => {
+const BreakdownTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-md border bg-popover px-3 py-2 text-sm shadow-md animate-in fade-in-0 zoom-in-95 min-w-55">
-        <p className="mb-2 font-semibold text-foreground border-b border-border pb-1">
+      <div className="rounded-lg border bg-popover/95 px-4 py-3 text-sm shadow-xl backdrop-blur-sm animate-in fade-in-0 zoom-in-95 min-w-55">
+        <p className="mb-2 font-semibold text-foreground border-b border-border/50 pb-2">
           {label}
         </p>
-        <div className="flex flex-col gap-1.5">
-          {payload.map((entry: any, index: number) => {
+        <div className="flex flex-col gap-2">
+          {payload.map((entry, index) => {
             const dataKey = entry.dataKey as string;
+            // Safe access using the partial record
             const weightKey = WEIGHT_MAP[dataKey];
-            const weightValue = weightKey ? entry.payload[weightKey] : null;
-            const formattedAmount = formatRs(entry.value);
+            const originalData = entry.payload as any;
+
+            const weightValue = weightKey ? originalData[weightKey] : null;
+            const formattedAmount = formatRs(Number(entry.value));
 
             const displayValue =
               weightValue !== null &&
               weightValue !== undefined &&
-              weightValue > 0
-                ? `${formattedAmount}/${Math.round(weightValue)}kg`
+              Number(weightValue) > 0
+                ? `${formattedAmount} / ${Math.round(Number(weightValue))}kg`
                 : formattedAmount;
 
             return (
@@ -133,14 +163,14 @@ const BreakdownTooltip = ({ active, payload, label }: any) => {
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/20"
+                    className="h-2.5 w-2.5 rounded-full ring-2 ring-background"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-muted-foreground capitalize text-xs sm:text-sm">
+                  <span className="text-muted-foreground capitalize font-medium">
                     {entry.name}
                   </span>
                 </div>
-                <span className="font-mono font-medium text-foreground text-xs sm:text-sm whitespace-nowrap">
+                <span className="font-mono font-bold text-foreground whitespace-nowrap">
                   {displayValue}
                 </span>
               </div>
@@ -153,6 +183,104 @@ const BreakdownTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+interface MetricChartCardProps<T extends ChartDataPoint> {
+  title: string;
+  icon: LucideIcon;
+  data: T[];
+  dataKey: keyof T & string;
+  color: string;
+  unit?: string;
+}
+
+const MetricChartCard = <T extends ChartDataPoint>({
+  title,
+  icon: Icon,
+  data,
+  dataKey,
+  color,
+  unit = "₹",
+}: MetricChartCardProps<T>) => {
+  const totalValue = useMemo(() => {
+    return data.reduce((acc, curr) => {
+      const val = Number(curr[dataKey] || 0);
+      return acc + val;
+    }, 0);
+  }, [data, dataKey]);
+
+  return (
+    <Card className="flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-muted/30">
+        <div className="space-y-1">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {title}
+          </CardTitle>
+          <div className="text-xl font-bold font-mono tracking-tight">
+            {formatRs(totalValue)}
+          </div>
+        </div>
+        <div className={`p-2 rounded-full bg-background border shadow-sm`}>
+          <Icon className="h-4 w-4 text-primary" style={{ color: color }} />
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 pt-4">
+        <div className="h-45 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 5, bottom: 0, left: -25 }}
+            >
+              <defs>
+                <linearGradient
+                  id={`gradient-${dataKey}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.4} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="hsl(var(--border))"
+              />
+              <XAxis
+                dataKey="monthLabel"
+                axisLine={false}
+                tickLine={false}
+                tick={AXIS_STYLE}
+                padding={{ left: 10, right: 10 }}
+                dy={10}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={AXIS_STYLE}
+                tickFormatter={(value) => `${unit}${value / 1000}k`}
+              />
+              <Tooltip
+                content={<BreakdownTooltip />}
+                cursor={{ fill: "hsl(var(--muted))", opacity: 0.2 }}
+              />
+              <Bar
+                dataKey={dataKey}
+                fill={`url(#gradient-${dataKey})`}
+                stroke={color}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={60}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// --- Main Export ---
+
 export const DashboardCharts = ({
   creditData,
   debitMillData,
@@ -162,8 +290,8 @@ export const DashboardCharts = ({
     return creditData.map((creditItem) => {
       const debitItem = debitMillData.find((d) => d.month === creditItem.month);
 
-      const totalCredit = creditItem.totalCredit;
-      const MillDebit = debitItem?.totalMillDebit || 0;
+      const totalCredit = Number(creditItem.totalCredit || 0);
+      const MillDebit = Number(debitItem?.totalMillDebit || 0);
       const Income = totalCredit - MillDebit;
 
       return {
@@ -176,7 +304,7 @@ export const DashboardCharts = ({
   }, [creditData, debitMillData]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* --- Chart 1: Overview --- */}
       <Card className="overflow-hidden">
         <CardHeader>
@@ -286,254 +414,108 @@ export const DashboardCharts = ({
         </CardContent>
       </Card>
 
+      {/* --- Breakdown Tabs --- */}
       <Tabs defaultValue="income" className="w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-          <h2 className="text-lg font-semibold tracking-tight">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
             Detailed Breakdown
           </h2>
-          <TabsList className="grid w-full sm:w-auto grid-cols-2">
-            <TabsTrigger value="income">Income</TabsTrigger>
-            <TabsTrigger value="expense">Expense</TabsTrigger>
+          <TabsList className="grid w-full sm:w-100 grid-cols-2">
+            <TabsTrigger value="income">Income Streams</TabsTrigger>
+            <TabsTrigger value="expense">Expense Streams</TabsTrigger>
           </TabsList>
         </div>
 
-        {/* Income Content */}
+        {/* --- INCOME TAB --- */}
         <TabsContent value="income" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Revenue</CardTitle>
-              <CardDescription>Flour, Oil, Khari, Mill credits</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-75 sm:h-87.5 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={creditData}
-                    margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="hsl(var(--border))"
-                      strokeOpacity={0.5}
-                    />
-                    <XAxis
-                      dataKey="monthLabel"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={AXIS_STYLE}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={AXIS_STYLE}
-                      tickFormatter={(value) => `₹${value / 1000}k`}
-                      width={40}
-                    />
-                    <Tooltip
-                      content={<BreakdownTooltip />}
-                      cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
-                    />
-                    <Legend
-                      wrapperStyle={{
-                        paddingTop: "20px",
-                        fontSize: "12px",
-                        color: "hsl(var(--foreground))",
-                      }}
-                      iconType="circle"
-                    />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <MetricChartCard
+              title="Flour Revenue"
+              icon={Wheat}
+              data={creditData}
+              dataKey="flourRs"
+              color={CHART_COLORS.flour}
+            />
 
-                    <Bar
-                      dataKey="flourRs"
-                      name="Flour"
-                      stackId="a"
-                      fill={CHART_COLORS.flour}
-                      radius={[0, 0, 4, 4]}
-                    />
-                    <Bar
-                      dataKey="oilRs"
-                      name="Oil"
-                      stackId="a"
-                      fill={CHART_COLORS.oil}
-                    />
-                    <Bar
-                      dataKey="khariRs"
-                      name="Khari"
-                      stackId="a"
-                      fill={CHART_COLORS.khari}
-                    />
-                    <Bar
-                      dataKey="millCredit"
-                      name="Mill Cr"
-                      stackId="a"
-                      fill={CHART_COLORS.millCr}
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+            <MetricChartCard
+              title="Oil Revenue"
+              icon={Droplets}
+              data={creditData}
+              dataKey="oilRs"
+              color={CHART_COLORS.oil}
+            />
+
+            <MetricChartCard
+              title="Khari Revenue"
+              icon={Package}
+              data={creditData}
+              dataKey="khariRs"
+              color={CHART_COLORS.khari}
+            />
+
+            <MetricChartCard
+              title="Total Mill Credits"
+              icon={Building2}
+              data={creditData}
+              dataKey="millCredit"
+              color={CHART_COLORS.millCr}
+            />
+          </div>
         </TabsContent>
 
-        {/* Expense Content */}
+        {/* --- EXPENSE TAB --- */}
         <TabsContent value="expense" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Expense</CardTitle>
-              <CardDescription>
-                Wheat, Mustard, Bhim, Viswa, Mill Debit
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-75 sm:h-87.5 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={debitMillData}
-                    margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="hsl(var(--border))"
-                      strokeOpacity={0.5}
-                    />
-                    <XAxis
-                      dataKey="monthLabel"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={AXIS_STYLE}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={AXIS_STYLE}
-                      tickFormatter={(value) => `₹${value / 1000}k`}
-                      width={40}
-                    />
-                    <Tooltip
-                      content={<BreakdownTooltip />}
-                      cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
-                    />
-                    <Legend
-                      wrapperStyle={{
-                        paddingTop: "20px",
-                        fontSize: "12px",
-                        color: "hsl(var(--foreground))",
-                      }}
-                      iconType="circle"
-                    />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <MetricChartCard
+              title="Wheat Purchase"
+              icon={ShoppingBasket}
+              data={debitMillData}
+              dataKey="gehumRs"
+              color={CHART_COLORS.wheat}
+            />
 
-                    <Bar
-                      dataKey="gehumRs"
-                      name="Wheat"
-                      stackId="a"
-                      fill={CHART_COLORS.wheat}
-                      radius={[0, 0, 4, 4]}
-                    />
-                    <Bar
-                      dataKey="sarsoRs"
-                      name="Mustard"
-                      stackId="a"
-                      fill={CHART_COLORS.mustard}
-                    />
-                    <Bar
-                      dataKey="staff1Cost"
-                      name="Bhim"
-                      stackId="a"
-                      fill={CHART_COLORS.bhim}
-                    />
-                    <Bar
-                      dataKey="staff2Cost"
-                      name="Viswa"
-                      stackId="a"
-                      fill={CHART_COLORS.viswa}
-                    />
-                    <Bar
-                      dataKey="millDebit"
-                      name="Mill Dr"
-                      stackId="a"
-                      fill={CHART_COLORS.millDr}
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+            <MetricChartCard
+              title="Mustard Purchase"
+              icon={Sprout}
+              data={debitMillData}
+              dataKey="sarsoRs"
+              color={CHART_COLORS.mustard}
+            />
+
+            <MetricChartCard
+              title="Total Mill Debits"
+              icon={Building2}
+              data={debitMillData}
+              dataKey="millDebit"
+              color={CHART_COLORS.millDr}
+            />
+
+            <MetricChartCard
+              title="Bhim (Staff)"
+              icon={Users}
+              data={debitMillData}
+              dataKey="staff1Cost"
+              color={CHART_COLORS.bhim}
+            />
+
+            <MetricChartCard
+              title="Viswa (Staff)"
+              icon={Users}
+              data={debitMillData}
+              dataKey="staff2Cost"
+              color={CHART_COLORS.viswa}
+            />
+
+            <MetricChartCard
+              title="Home Debit"
+              icon={Home}
+              data={debitHomeData}
+              dataKey="homeDebit"
+              color={CHART_COLORS.lossBar}
+            />
+          </div>
         </TabsContent>
       </Tabs>
-
-      {/* Home debit */}
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Home Debit</CardTitle>
-          <CardDescription>Overview of home expense</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-75 sm:h-100 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={debitHomeData}
-                margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
-              >
-                {/* Removed unused <defs> gradient to clean up code */}
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="hsl(var(--border))"
-                  strokeOpacity={0.5}
-                />
-
-                <XAxis
-                  dataKey="monthLabel"
-                  axisLine={false}
-                  tickLine={false}
-                  // Applied the safe neutral color directly here
-                  tick={{ fill: "#71717a", fontSize: 10 }}
-                  dy={10}
-                  interval="preserveStartEnd"
-                />
-
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  // Applied the safe neutral color directly here
-                  tick={{ fill: "#71717a", fontSize: 10 }}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
-                  width={40}
-                />
-
-                <Tooltip
-                  content={<OverviewTooltip />}
-                  cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
-                />
-
-                <Legend
-                  wrapperStyle={{
-                    paddingTop: "20px",
-                    fontSize: "12px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                  iconType="circle"
-                />
-
-                <Bar
-                  dataKey="homeDebit"
-                  name="Home Debit"
-                  fill={CHART_COLORS.lossBar}
-                  radius={[4, 4, 0, 0]}
-                  barSize={20}
-                  fillOpacity={0.9}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
