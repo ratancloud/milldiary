@@ -1,13 +1,31 @@
 import { apiResponseError, apiResponseSuccess } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { MonthlyHomeDebit, MonthlyMillCredit, MonthlyMillDebit, YearSummaryCard } from "@/types/dashboard";
+import {
+  MonthlyHomeDebit,
+  MonthlyMillCredit,
+  MonthlyMillDebit,
+  YearSummaryCard,
+} from "@/types/dashboard";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
 /* ---------------- Helper ---------------- */
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 const initMonth = (month: number) => ({
   month,
@@ -32,7 +50,7 @@ const initMonth = (month: number) => ({
   staff2Cost: 0,
   millDebit: 0,
   homeDebit: 0,
-})
+});
 
 /* ---------------- API ---------------- */
 
@@ -41,21 +59,21 @@ export async function GET(req: NextRequest) {
     /* ---------- Auth ---------- */
     const session = await auth.api.getSession({
       headers: await headers(),
-    })
+    });
 
     if (!session?.user?.id) {
-      return apiResponseError("Unauthorized", 401)
+      return apiResponseError("Unauthorized", 401);
     }
 
     /* ---------- Query Params ---------- */
-    const year = Number(req.nextUrl.searchParams.get("year"))
+    const year = Number(req.nextUrl.searchParams.get("year"));
     if (!year) {
-      return apiResponseError("Valid year is required", 400)
+      return apiResponseError("Valid year is required", 400);
     }
 
     /* ---------- Date Range (UTC safe) ---------- */
-    const start = new Date(Date.UTC(year, 0, 1))
-    const end = new Date(Date.UTC(year + 1, 0, 1))
+    const start = new Date(Date.UTC(year, 0, 1));
+    const end = new Date(Date.UTC(year + 1, 0, 1));
 
     /* ---------- Fetch Data ---------- */
     const rows = await prisma.millData.findMany({
@@ -66,97 +84,87 @@ export async function GET(req: NextRequest) {
           lt: end,
         },
       },
-    })
+    });
 
     /* ---------- Month Map ---------- */
-    const monthMap = new Map<number, ReturnType<typeof initMonth>>()
+    const monthMap = new Map<number, ReturnType<typeof initMonth>>();
 
     /* ---------- Year Totals ---------- */
-    let totalCredit = 0
-    let totalDebit = 0
-    let tMillDebit = 0
-    let tHomeDebit = 0
+    let totalCredit = 0;
+    let totalDebit = 0;
+    let tMillDebit = 0;
+    let tHomeDebit = 0;
 
-    let tMillCredit = 0
-    let tFlourWeight = 0
-    let tFlourRs = 0
-    let tOilWeight = 0
-    let tOilRs = 0
-    let tKhariWeight = 0
-    let tKhariRs = 0
+    let tMillCredit = 0;
+    let tFlourWeight = 0;
+    let tFlourRs = 0;
+    let tOilWeight = 0;
+    let tOilRs = 0;
+    let tKhariWeight = 0;
+    let tKhariRs = 0;
 
-    let tSarsoWeight = 0
-    let tSarsoRs = 0
-    let tGehumWeight = 0
-    let tGehumRs = 0
-    let tStaff1Rs = 0
-    let tStaff2Rs = 0
-
-
+    let tSarsoWeight = 0;
+    let tSarsoRs = 0;
+    let tGehumWeight = 0;
+    let tGehumRs = 0;
+    let tStaff1Rs = 0;
+    let tStaff2Rs = 0;
 
     /* ---------- Reduce Rows ---------- */
     for (const row of rows) {
-      const month = row.date.getUTCMonth() + 1
-      if (!monthMap.has(month)) monthMap.set(month, initMonth(month))
+      const month = row.date.getUTCMonth() + 1;
+      if (!monthMap.has(month)) monthMap.set(month, initMonth(month));
 
-      const m = monthMap.get(month)!
+      const m = monthMap.get(month)!;
 
-      /* ---- Credit ---- */
-      m.millCredit += row.millCredit
-      m.flourRs += row.flourRs
-      m.flourWeight += row.flourWeight
-      m.oilRs += row.oilRs
-      m.oilWeight += row.oilWeight
-      m.khariRs += row.khariRs
-      m.khariWeight += row.khariWeight
-      m.totalCredit += row.totalCredit
+      // Monthly Totals
+      m.millCredit += row.millCredit;
+      m.flourRs += row.flourRs;
+      m.flourWeight += row.flourWeight;
+      m.oilRs += row.oilRs;
+      m.oilWeight += row.oilWeight;
+      m.khariRs += row.khariRs;
+      m.khariWeight += row.khariWeight;
+      m.totalCredit += row.totalCredit;
 
-      /* ---- Debit ---- */
-      m.gehumRs += row.gehumRs ?? 0
-      m.gehumWeight += row.gehumWeight
-      m.sarsoRs += row.sarsoRs ?? 0
-      m.sarsoWeight += row.sarsoWeight
-      m.staff1Cost += row.staff1Rs
-      m.staff2Cost += row.staff2Rs
-      m.millDebit += row.millDebit
-      m.homeDebit += row.homeDebit
+      m.gehumRs += row.gehumRs ?? 0;
+      m.gehumWeight += row.gehumWeight;
+      m.sarsoRs += row.sarsoRs ?? 0;
+      m.sarsoWeight += row.sarsoWeight;
+      m.staff1Cost += row.staff1Rs;
+      m.staff2Cost += row.staff2Rs;
+      m.millDebit += row.millDebit;
+      m.homeDebit += row.homeDebit;
 
-      /* ---- Year Totals ---- */
-      totalCredit += row.totalCredit
-      totalDebit += row.totalDebit
+      // Year Totals
+      totalCredit += row.totalCredit;
+      totalDebit += row.totalDebit;
 
-      tMillDebit +=
-        row.millDebit +
-        row.staff1Rs +
-        row.staff2Rs +
-        (row.gehumRs ?? 0) +
-        (row.sarsoRs ?? 0)
+      tMillCredit += row.millCredit;
+      tFlourWeight += row.flourWeight;
+      tFlourRs += row.flourRs;
+      tOilWeight += row.oilWeight;
+      tOilRs += row.oilRs;
+      tKhariWeight += row.khariWeight;
+      tKhariRs += row.khariRs;
 
-      tHomeDebit += row.homeDebit
-
-      tMillCredit += row.millCredit
-      tFlourWeight += row.flourWeight
-      tFlourRs += row.flourRs
-      tOilWeight += row.oilWeight
-      tOilRs += row.oilRs
-      tKhariWeight += row.khariWeight
-      tKhariRs += row.khariRs
-      tSarsoWeight += row.sarsoWeight
-      tSarsoRs += row.sarsoRs
-      tGehumWeight += row.gehumWeight
-      tGehumRs += row.gehumRs
-      tStaff1Rs += row.staff1Rs
-      tStaff2Rs += row.staff2Rs
-
+      tSarsoWeight += row.sarsoWeight;
+      tSarsoRs += row.sarsoRs;
+      tGehumWeight += row.gehumWeight;
+      tGehumRs += row.gehumRs;
+      tStaff1Rs += row.staff1Rs;
+      tStaff2Rs += row.staff2Rs;
+      tMillDebit += row.millDebit;
+      tHomeDebit += row.homeDebit;
     }
 
-    /* ---------- Monthly Arrays ---------- */
-    const monthlyCredit: MonthlyMillCredit[] = []
-    const monthlyMillDebit: MonthlyMillDebit[] = []
-    const monthlyHomeDebit: MonthlyHomeDebit[] = []
+    // Monthly Arrays data
+    const monthlyCredit: MonthlyMillCredit[] = [];
+    const monthlyMillDebit: MonthlyMillDebit[] = [];
+    const monthlyHomeDebit: MonthlyHomeDebit[] = [];
 
     for (let month = 1; month <= 12; month++) {
-      const m = monthMap.get(month) ?? initMonth(month)
+      const m = monthMap.get(month) ?? initMonth(month);
 
       monthlyCredit.push({
         month,
@@ -169,14 +177,7 @@ export async function GET(req: NextRequest) {
         khariRs: m.khariRs,
         khariWeight: m.khariWeight,
         totalCredit: m.totalCredit,
-      })
-
-      const totalMillDebit =
-        m.gehumRs +
-        m.sarsoRs +
-        m.staff1Cost +
-        m.staff2Cost +
-        m.millDebit
+      });
 
       monthlyMillDebit.push({
         month,
@@ -188,23 +189,24 @@ export async function GET(req: NextRequest) {
         staff1Cost: m.staff1Cost,
         staff2Cost: m.staff2Cost,
         millDebit: m.millDebit,
-        totalMillDebit,
-      })
+        totalMillDebit:
+          m.gehumRs + m.sarsoRs + m.staff1Cost + m.staff2Cost + m.millDebit,
+      });
 
       monthlyHomeDebit.push({
         month,
         monthLabel: m.monthLabel,
-        homeDebit: m.homeDebit
-      })
+        homeDebit: m.homeDebit,
+      });
     }
 
-    /* ---------- Summary ---------- */
+    // yearly Summary
     const summary: YearSummaryCard = {
       year,
       totalCredit,
       totalDebit,
       tMillDebit,
-      tHomeDebit,
+
       tMillCredit,
       tFlourWeight,
       tFlourRs,
@@ -212,25 +214,27 @@ export async function GET(req: NextRequest) {
       tOilRs,
       tKhariWeight,
       tKhariRs,
+
       tGehumWeight,
       tGehumRs,
       tSarsoWeight,
       tSarsoRs,
       tStaff1Rs,
       tStaff2Rs,
+      tHomeDebit,
       netIncome: totalCredit - tMillDebit,
       netSaving: totalCredit - totalDebit,
-    }
+    };
 
-    /* ---------- Response ---------- */
+    // Response 
     return apiResponseSuccess({
       summary,
       monthlyCredit,
       monthlyMillDebit,
-      monthlyHomeDebit
-    })
+      monthlyHomeDebit,
+    });
   } catch (error) {
-    console.error("[DASHBOARD_API_ERROR]", error)
-    return apiResponseError("Internal Server Error", 500)
+    console.error("[DASHBOARD_API_ERROR]", error);
+    return apiResponseError("Internal Server Error", 500);
   }
 }
