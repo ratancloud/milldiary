@@ -4,6 +4,22 @@ export interface YearSummaryCard {
   totalDebit: number;
   tMillDebit: number;
   tHomeDebit: number;
+
+  tMillCredit: number
+  tFlourWeight: number;
+  tFlourRs: number;
+  tOilWeight: number;
+  tOilRs: number;
+  tKhariWeight: number;
+  tKhariRs: number;
+    
+  tSarsoWeight: number;
+  tSarsoRs: number;
+  tGehumWeight: number;
+  tGehumRs: number;
+  tStaff1Rs: number;
+  tStaff2Rs: number;
+  
   netIncome: number;
   netSaving: number;
 }

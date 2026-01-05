@@ -77,6 +77,23 @@ export async function GET(req: NextRequest) {
     let tMillDebit = 0
     let tHomeDebit = 0
 
+    let tMillCredit = 0
+    let tFlourWeight = 0
+    let tFlourRs = 0
+    let tOilWeight = 0
+    let tOilRs = 0
+    let tKhariWeight = 0
+    let tKhariRs = 0
+
+    let tSarsoWeight = 0
+    let tSarsoRs = 0
+    let tGehumWeight = 0
+    let tGehumRs = 0
+    let tStaff1Rs = 0
+    let tStaff2Rs = 0
+
+
+
     /* ---------- Reduce Rows ---------- */
     for (const row of rows) {
       const month = row.date.getUTCMonth() + 1
@@ -116,6 +133,21 @@ export async function GET(req: NextRequest) {
         (row.sarsoRs ?? 0)
 
       tHomeDebit += row.homeDebit
+
+      tMillCredit += row.millCredit
+      tFlourWeight += row.flourWeight
+      tFlourRs += row.flourRs
+      tOilWeight += row.oilWeight
+      tOilRs += row.oilRs
+      tKhariWeight += row.khariWeight
+      tKhariRs += row.khariRs
+      tSarsoWeight += row.sarsoWeight
+      tSarsoRs += row.sarsoRs
+      tGehumWeight += row.gehumWeight
+      tGehumRs += row.gehumRs
+      tStaff1Rs += row.staff1Rs
+      tStaff2Rs += row.staff2Rs
+
     }
 
     /* ---------- Monthly Arrays ---------- */
@@ -173,6 +205,19 @@ export async function GET(req: NextRequest) {
       totalDebit,
       tMillDebit,
       tHomeDebit,
+      tMillCredit,
+      tFlourWeight,
+      tFlourRs,
+      tOilWeight,
+      tOilRs,
+      tKhariWeight,
+      tKhariRs,
+      tGehumWeight,
+      tGehumRs,
+      tSarsoWeight,
+      tSarsoRs,
+      tStaff1Rs,
+      tStaff2Rs,
       netIncome: totalCredit - tMillDebit,
       netSaving: totalCredit - totalDebit,
     }

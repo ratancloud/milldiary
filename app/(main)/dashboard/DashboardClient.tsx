@@ -1,7 +1,9 @@
 "use client";
 
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import StatCard from "@/components/millData/StatCard";
+import StatCard2 from "@/components/millData/StatCard2";
+import StatItem from "@/components/millData/StatItem";
 import { DashboardChartsSkeleton } from "@/components/skelton/DashboardChartsSkeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,8 +24,6 @@ import {
   TrendingUp,
   TrendingDown,
   PiggyBank,
-  Building2,
-  Home,
   Loader2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -130,55 +130,128 @@ function DashboardContent() {
       </div>
 
       {/* Yearly summary card  */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6">
-        <SummaryCards
-          label="Total Credit"
-          icon={TrendingUp}
-          value={formatRs(dashboardData?.summary.totalCredit)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          color="green"
-        />
-        <SummaryCards
-          label="Total Debit"
-          icon={TrendingDown}
-          value={formatRs(dashboardData?.summary.totalDebit ?? 0)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          color="red"
-        />
-        <SummaryCards
-          label="Mill Debit"
-          icon={Building2}
-          value={formatRs(dashboardData?.summary.tMillDebit ?? 0)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          color="orange"
-        />
-        <SummaryCards
-          label="Home Debit"
-          icon={Home}
-          value={formatRs(dashboardData?.summary.tHomeDebit ?? 0)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          color="purple"
-        />
-        <SummaryCards
+      <div className="grid grid-cols-2 gap-4 lg:gap-6">
+        <StatCard2
           label="Income"
           icon={Wallet}
           value={formatRs(dashboardData?.summary.netIncome ?? 0)}
           isLoading={loading}
           isSensitive={isSensitive}
-          color="blue"
+          variant="purple"
         />
-        <SummaryCards
+        <StatCard2
           label="Saving"
           icon={PiggyBank}
           value={formatRs(dashboardData?.summary.netSaving ?? 0)}
           isLoading={loading}
           isSensitive={isSensitive}
-          color="indigo"
+          variant="blue"
         />
+      </div>
+
+      {/* Analysis Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* creadit data */}
+        <StatCard
+          icon={TrendingUp}
+          label="Total Credits"
+          headerValue={formatRs(dashboardData?.summary.totalCredit)}
+          isLoading={loading}
+          isSensitive={isSensitive}
+        >
+          <StatItem
+            label="Mill Credit"
+            value={dashboardData?.summary.tMillCredit || 0}
+            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
+            colorClass={`text-green-600 dark:text-green-400`}
+            isSensitive={isSensitive}
+          />
+          <StatItem
+            label="Flour"
+            value={dashboardData?.summary.tFlourRs || 0}
+            sub={dashboardData?.summary.tFlourWeight || 0}
+            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
+            colorClass={`text-green-600 dark:text-green-400`}
+            isSensitive={isSensitive}
+          />
+          <StatItem
+            label="Oil"
+            value={dashboardData?.summary.tOilRs || 0}
+            sub={dashboardData?.summary.tOilWeight || 0}
+            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
+            colorClass={`text-green-600 dark:text-green-400`}
+            isSensitive={isSensitive}
+          />
+          <StatItem
+            label="Khari"
+            value={dashboardData?.summary.tKhariRs || 0}
+            sub={dashboardData?.summary.tKhariWeight || 0}
+            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
+            colorClass={`text-green-600 dark:text-green-400`}
+            isSensitive={isSensitive}
+          />
+        </StatCard>
+
+        {/* debit data */}
+        <StatCard
+          icon={TrendingDown}
+          label="Total Debits"
+          headerClassName={`bg-red-50/40 dark:bg-red-900/10`}
+          titleClassName={`text-red-600 dark:text-red-400`}
+          headerValueClassName={`text-red-700 dark:text-red-400`}
+          headerValue={formatRs(dashboardData?.summary.totalDebit)}
+          isLoading={loading}
+          isSensitive={isSensitive}
+        >
+          <StatItem
+            label="Gehum"
+            value={dashboardData?.summary.tGehumRs || 0}
+            sub={dashboardData?.summary.tGehumWeight || 0}
+            statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+            colorClass="text-red-600 dark:text-red-400"
+            isSensitive={isSensitive}
+          />
+          <StatItem
+            label="Sarso"
+            value={dashboardData?.summary.tSarsoRs || 0}
+            sub={dashboardData?.summary.tSarsoWeight || 0}
+            statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+            colorClass="text-red-600 dark:text-red-400"
+            isSensitive={isSensitive}
+          />
+          <div className="grid md:grid-cols-2 gap-2">
+            <StatItem
+              label="Home"
+              value={dashboardData?.summary.tHomeDebit || 0}
+              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+              colorClass="text-red-600 dark:text-red-400"
+              isSensitive={isSensitive}
+            />
+            <StatItem
+              label="Mill"
+              value={dashboardData?.summary.tMillDebit || 0}
+              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+              colorClass="text-red-600 dark:text-red-400"
+              isSensitive={isSensitive}
+            />
+          </div>
+          <div className="grid md:grid-cols-2 gap-2">
+            <StatItem
+              label="Bhim"
+              value={dashboardData?.summary.tStaff1Rs || 0}
+              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+              colorClass="text-red-600 dark:text-red-400"
+              isSensitive={isSensitive}
+            />
+            <StatItem
+              label="Viswa"
+              value={dashboardData?.summary.tStaff2Rs || 0}
+              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
+              colorClass="text-red-600 dark:text-red-400"
+              isSensitive={isSensitive}
+            />
+          </div>
+        </StatCard>
       </div>
 
       {/* Add Charts Section below SummaryCards */}
@@ -188,7 +261,7 @@ function DashboardContent() {
           debitMillData={dashboardData.monthlyMillDebit}
           debitHomeData={dashboardData.monthlyHomeDebit}
         />
-      ): (
+      ) : (
         <DashboardChartsSkeleton />
       )}
     </div>

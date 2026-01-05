@@ -57,7 +57,7 @@ const StatCard2 = ({
         style.card
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle
           className={cn("text-sm sm:text-base font-bold", style.title)}
         >
