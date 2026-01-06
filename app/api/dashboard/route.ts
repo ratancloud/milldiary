@@ -127,9 +127,9 @@ export async function GET(req: NextRequest) {
       m.khariWeight += row.khariWeight;
       m.totalCredit += row.totalCredit;
 
-      m.gehumRs += row.gehumRs ?? 0;
+      m.gehumRs += row.gehumRs;
       m.gehumWeight += row.gehumWeight;
-      m.sarsoRs += row.sarsoRs ?? 0;
+      m.sarsoRs += row.sarsoRs;
       m.sarsoWeight += row.sarsoWeight;
       m.staff1Cost += row.staff1Rs;
       m.staff2Cost += row.staff2Rs;
@@ -205,7 +205,6 @@ export async function GET(req: NextRequest) {
       year,
       totalCredit,
       totalDebit,
-      tMillDebit,
 
       tMillCredit,
       tFlourWeight,
@@ -221,8 +220,9 @@ export async function GET(req: NextRequest) {
       tSarsoRs,
       tStaff1Rs,
       tStaff2Rs,
+      tMillDebit,
       tHomeDebit,
-      netIncome: totalCredit - tMillDebit,
+      netIncome: totalCredit - (tGehumRs + tSarsoRs + tStaff1Rs + tStaff2Rs + tMillDebit),
       netSaving: totalCredit - totalDebit,
     };
 
