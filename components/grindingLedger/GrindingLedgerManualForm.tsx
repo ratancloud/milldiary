@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { Loader2, PlusSquare, Edit } from "lucide-react";
+import { Loader2, PlusSquare, Edit, CalendarIcon } from "lucide-react";
 import { GrindingLedger } from "@/types/grinding-ledger";
 import {
   createGrindingLedgerFormSchema,
@@ -20,6 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { formateIndDate } from "@/lib/helper";
 
 interface GrindingLedgerManualFormProps {
   onSuccess: () => void;
@@ -55,7 +62,13 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
     },
   });
 
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const commodityType = watch("commodityType");
+  const watchedDate = watch("date");
+
+  const displayDate = watchedDate
+    ? formateIndDate(new Date(`${watchedDate}T00:00:00`))
+    : formateIndDate(new Date());
 
   useEffect(() => {
     if (editItem) {
@@ -143,15 +156,34 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Date */}
           <div className="space-y-1.5">
-            <Label htmlFor="date" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+            <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
               Date
             </Label>
-            <Input
-              type="date"
-              id="date"
-              {...register("date")}
-              className="w-full font-medium h-11 rounded-xl"
-            />
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <span>{displayDate}</span>
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto overflow-hidden p-0">
+                <Calendar
+                  mode="single"
+                  selected={watchedDate ? new Date(`${watchedDate}T00:00:00`) : undefined}
+                  onSelect={(selectedDate) => {
+                    if (!selectedDate) return;
+                    const year = selectedDate.getFullYear();
+                    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+                    const day = String(selectedDate.getDate()).padStart(2, "0");
+                    setValue("date", `${year}-${month}-${day}`, { shouldValidate: true, shouldDirty: true });
+                    setCalendarOpen(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
             {errors.date && (
               <p className="text-xs text-red-500">{errors.date.message}</p>
             )}
@@ -165,6 +197,7 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
             <Input
               type="number"
               id="serialNo"
+              onWheel={(e) => e.currentTarget.blur()}
               {...register("serialNo", { valueAsNumber: true })}
               placeholder="101"
               className="w-full font-mono font-bold h-11 rounded-xl"
@@ -269,7 +302,7 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
         </div>
 
         <div className="border-t border-border/60 pt-4">
-          <div className="space-y-1.5 max-w-[240px]">
+          <div className="space-y-1.5 w-full sm:max-w-[240px]">
             <Label htmlFor="weight" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
               Milled Weight (Kg)
             </Label>
@@ -278,6 +311,7 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
                 type="number"
                 step="0.1"
                 id="weight"
+                onWheel={(e) => e.currentTarget.blur()}
                 {...register("weight", { valueAsNumber: true })}
                 placeholder="45.5"
                 className="w-full font-bold text-xl pr-12 h-12 rounded-xl"

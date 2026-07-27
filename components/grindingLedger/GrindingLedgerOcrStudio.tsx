@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
   Loader2,
@@ -11,6 +11,9 @@ import {
   Plus,
   Eye,
   FileText,
+  CalendarIcon,
+  AlertTriangle,
+  Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +26,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { formateIndDate } from "@/lib/helper";
 
 interface ExtractedRow {
   serialNo: number;
@@ -37,11 +57,13 @@ interface ExtractedRow {
 interface GrindingLedgerOcrStudioProps {
   onSuccess: () => void;
   onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   onSuccess,
   onCancel,
+  onDirtyChange,
 }) => {
   const [step, setStep] = useState<"upload" | "review">("upload");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -54,6 +76,43 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [commodityType, setCommodityType] = useState<"WHEAT" | "MUSTARD">("WHEAT");
   const [records, setRecords] = useState<ExtractedRow[]>([]);
+  const [editingCardIdx, setEditingCardIdx] = useState<number | null>(null);
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"cancel" | "reset" | null>(null);
+
+  useEffect(() => {
+    onDirtyChange?.(step === "review" && records.length > 0);
+  }, [step, records.length, onDirtyChange]);
+
+  const handleAttemptCancel = () => {
+    if (step === "review" && records.length > 0) {
+      setPendingAction("cancel");
+      setShowConfirmDialog(true);
+    } else {
+      onCancel();
+    }
+  };
+
+  const handleAttemptReset = () => {
+    if (step === "review" && records.length > 0) {
+      setPendingAction("reset");
+      setShowConfirmDialog(true);
+    } else {
+      handleReset();
+    }
+  };
+
+  const handleConfirmAction = () => {
+    setShowConfirmDialog(false);
+    if (pendingAction === "cancel") {
+      onCancel();
+    } else if (pendingAction === "reset") {
+      handleReset();
+    }
+    setPendingAction(null);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -89,6 +148,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
       if (result.enhancedImage) {
         setEnhancedImageUrl(result.enhancedImage);
       }
+      setEditingCardIdx(null);
       setStep("review");
       toast.success(`Extracted ${result.records?.length || 0} rows successfully!`);
     } catch (error: any) {
@@ -112,6 +172,9 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
 
   const handleDeleteRow = (index: number) => {
     setRecords((prev) => prev.filter((_, idx) => idx !== index));
+    if (editingCardIdx === index) {
+      setEditingCardIdx(null);
+    }
   };
 
   const handleAddEmptyRow = () => {
@@ -128,6 +191,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
         confidence: "HIGH",
       },
     ]);
+    setEditingCardIdx(records.length);
   };
 
   const handleSaveBulk = async () => {
@@ -158,7 +222,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
       const result = await res.json();
 
       if (!res.ok || !result.success) {
-        throw new Error(result.message || "Failed to batch insert records");
+        throw new Error(result.error || "Failed to save ledger entries");
       }
 
       toast.success(`Successfully saved ${result.data?.count || records.length} records into Grinding Ledger!`);
@@ -176,6 +240,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     setImagePreviewUrl(null);
     setEnhancedImageUrl(null);
     setRecords([]);
+    setEditingCardIdx(null);
   };
 
   return (
@@ -194,7 +259,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={handleReset}
+            onClick={handleAttemptReset}
             className="text-xs font-semibold rounded-xl h-9"
           >
             ← Upload Another Sheet
@@ -209,12 +274,31 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
                 Slip Date
               </Label>
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full font-medium h-11 rounded-xl"
-              />
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <span>{date ? formateIndDate(new Date(`${date}T00:00:00`)) : "-"}</span>
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto overflow-hidden p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date ? new Date(`${date}T00:00:00`) : undefined}
+                    onSelect={(selectedDate) => {
+                      if (!selectedDate) return;
+                      const year = selectedDate.getFullYear();
+                      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+                      const day = String(selectedDate.getDate()).padStart(2, "0");
+                      setDate(`${year}-${month}-${day}`);
+                      setCalendarOpen(false);
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-1.5">
@@ -274,13 +358,13 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </div>
             )}
           </div>
-
-          <div className="flex items-center justify-end gap-3 w-full pt-2">
+          {/* make mobile responsive */}
+          <div className="flex flex-col sm:flex-row items-center justify-end sm:justify-between gap-3 w-full pt-2">
             <Button
               type="button"
               variant="outline"
-              onClick={onCancel}
-              className="h-12 px-6 rounded-xl font-semibold"
+              onClick={handleAttemptCancel}
+              className="h-12 text-base px-6 rounded-xl font-semibold w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -344,7 +428,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </Button>
             </div>
 
-            <div className="flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[520px]">
+            <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[520px]">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b bg-muted/40 font-bold text-muted-foreground">
@@ -364,6 +448,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                         <Input
                           type="number"
                           value={row.serialNo}
+                          onWheel={(e) => e.currentTarget.blur()}
                           onChange={(e) => handleRowChange(idx, "serialNo", e.target.value)}
                           className="h-8 w-12 text-center font-bold font-mono px-1 text-xs rounded-lg"
                         />
@@ -403,6 +488,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                           type="number"
                           step="0.1"
                           value={row.weight}
+                          onWheel={(e) => e.currentTarget.blur()}
                           onChange={(e) => handleRowChange(idx, "weight", e.target.value)}
                           className="h-8 w-20 text-right font-bold text-xs px-2 rounded-lg"
                         />
@@ -410,13 +496,12 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                       <td className="p-1 text-center">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] px-1.5 py-0 font-bold ${
-                            row.confidence === "HIGH"
-                              ? "bg-green-500/10 text-green-600 border-green-500/30"
-                              : row.confidence === "MEDIUM"
+                          className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH"
+                            ? "bg-green-500/10 text-green-600 border-green-500/30"
+                            : row.confidence === "MEDIUM"
                               ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
                               : "bg-red-500/10 text-red-600 border-red-500/30"
-                          }`}
+                            }`}
                         >
                           {row.confidence || "HIGH"}
                         </Badge>
@@ -438,6 +523,222 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </table>
             </div>
 
+            {/* Mobile Responsive Cards View */}
+            <div className="block md:hidden flex-1 overflow-y-auto p-3 max-h-[520px] space-y-3">
+              {records.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground text-xs">
+                  No records extracted. Click &quot;Add Row&quot; to add manually.
+                </div>
+              ) : (
+                records.map((row, idx) => {
+                  const isEditing = editingCardIdx === idx;
+                  const totalPrice = Math.round((Number(row.weight) || 0) * 3);
+
+                  if (!isEditing) {
+                    return (
+                      <div
+                        key={idx}
+                        className="relative flex rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm active:scale-[0.99] transition-all"
+                      >
+                        {/* Left panel: serial circle + commodity label at bottom */}
+                        <div className="flex flex-col items-center justify-between gap-0 px-3 py-3 bg-primary/8 border-r border-border/40 shrink-0 min-w-[52px]">
+                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-mono font-black text-xs shadow-sm">
+                            {row.serialNo}
+                          </div>
+                          <span className="text-[9px] font-bold text-primary/70 mt-1 tracking-wide leading-none">
+                            {commodityType === "WHEAT" ? "Wheat" : "Sarso"}
+                          </span>
+                        </div>
+
+                        {/* Main content */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-2.5 px-3 gap-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-bold text-[14px] text-foreground leading-snug truncate">
+                                {row.customerNameHi || "अज्ञात"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground font-hindi truncate leading-relaxed">
+                                {row.customerNameEn || "Unnamed"}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/75 mt-0.5 truncate">
+                                {row.villageHi || "अज्ञात"}
+                                {row.villageEn ? <span className="font-hindi text-muted-foreground/60"> / {row.villageEn}</span> : null}
+                              </p>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={`text-[9px] px-1.5 py-0 font-bold shrink-0 ${row.confidence === "HIGH"
+                                ? "bg-green-500/10 text-green-600 border-green-500/30"
+                                : row.confidence === "MEDIUM"
+                                  ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+                                  : "bg-red-500/10 text-red-600 border-red-500/30"
+                                }`}
+                            >
+                              {row.confidence || "HIGH"}
+                            </Badge>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/40">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-extrabold text-[15px] tabular-nums text-foreground leading-none">
+                                {row.weight}
+                                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">kg</span>
+                              </span>
+                              <span className="text-[11px] font-semibold text-primary tabular-nums leading-none">
+                                · ₹{totalPrice}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingCardIdx(idx)}
+                                className="h-7 px-2.5 text-xs font-semibold rounded-lg gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                              >
+                                <Edit className="w-3 h-3" /> Edit
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteRow(idx)}
+                                className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg shrink-0"
+                                title="Remove row"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-card border-2 border-primary/60 rounded-2xl p-3.5 shadow-md space-y-3 relative ring-4 ring-primary/10"
+                    >
+                      <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-muted-foreground"># S.No</span>
+                          <Input
+                            type="number"
+                            value={row.serialNo}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            onChange={(e) => handleRowChange(idx, "serialNo", e.target.value)}
+                            className="h-8 w-16 text-center font-bold font-mono text-xs rounded-lg bg-background"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH"
+                              ? "bg-green-500/10 text-green-600 border-green-500/30"
+                              : row.confidence === "MEDIUM"
+                                ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+                                : "bg-red-500/10 text-red-600 border-red-500/30"
+                              }`}
+                          >
+                            {row.confidence || "HIGH"}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteRow(idx)}
+                            className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
+                            title="Remove row"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2.5">
+                        <div>
+                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Customer Name (English)
+                          </Label>
+                          <Input
+                            value={row.customerNameEn}
+                            onChange={(e) => handleRowChange(idx, "customerNameEn", e.target.value)}
+                            placeholder="English Name"
+                            className="h-9 text-xs rounded-lg mt-1 bg-background"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi">
+                            Customer Name (Hindi) - नाम
+                          </Label>
+                          <Input
+                            value={row.customerNameHi}
+                            onChange={(e) => handleRowChange(idx, "customerNameHi", e.target.value)}
+                            placeholder="Hindi Name"
+                            className="h-9 text-xs font-hindi rounded-lg mt-1 bg-background"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Village (En)
+                            </Label>
+                            <Input
+                              value={row.villageEn}
+                              onChange={(e) => handleRowChange(idx, "villageEn", e.target.value)}
+                              placeholder="English Village"
+                              className="h-9 text-xs rounded-lg mt-1 bg-background"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi">
+                              Village (Hi) - गाँव
+                            </Label>
+                            <Input
+                              value={row.villageHi}
+                              onChange={(e) => handleRowChange(idx, "villageHi", e.target.value)}
+                              placeholder="Hindi Village"
+                              className="h-9 text-xs font-hindi rounded-lg mt-1 bg-background text-muted-foreground"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Weight (Kg)
+                          </Label>
+                          <div className="relative mt-1">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={row.weight}
+                              onWheel={(e) => e.currentTarget.blur()}
+                              onChange={(e) => handleRowChange(idx, "weight", e.target.value)}
+                              className="h-9 text-right font-bold text-xs pr-10 rounded-lg bg-background"
+                            />
+                            <span className="absolute right-3 top-2 text-[10px] font-bold text-muted-foreground">
+                              KG
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setEditingCardIdx(null)}
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold h-8 px-4 rounded-xl shadow gap-1 text-xs"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Done Editing
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
             {/* Save Footer */}
             <div className="p-4 border-t bg-muted/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="text-xs text-muted-foreground">
@@ -447,7 +748,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                 <span className="font-bold text-foreground">{date}</span>.
               </div>
               <div className="flex items-center justify-end gap-2">
-                <Button variant="outline" onClick={onCancel} disabled={isSaving} className="h-10 px-4 rounded-xl font-semibold">
+                <Button variant="outline" onClick={handleAttemptCancel} disabled={isSaving} className="h-10 px-4 rounded-xl font-semibold">
                   Cancel
                 </Button>
                 <Button
@@ -472,6 +773,31 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
           </div>
         </div>
       )}
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
+              <AlertTriangle className="w-5 h-5 shrink-0 animate-pulse" />
+              Discard AI OCR Results?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              The AI OCR processing has completed and extracted <strong>{records.length} records</strong>. AI calls are expensive and if you leave or upload another sheet now, these extracted records will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2 sm:gap-0">
+            <AlertDialogCancel onClick={() => setPendingAction(null)}>
+              No, Continue Editing
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmAction}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              Yes, Discard Records
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

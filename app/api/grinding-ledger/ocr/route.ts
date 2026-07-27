@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     const prompt = `You are a high-precision OCR engine for Indian grinding mill (Atta/Flour/Mustard Oil mill) handwritten customer register sheets.
 Extract all handwritten rows from this grinding ledger page into a structured JSON list.
 
-MASTER VILLAGES (Strict Match):
+MASTER VILLAGES (as of now not Strict Match in future it strict):
 ${MASTER_VILLAGES.join(', ')}
 
 RULES:
