@@ -47,18 +47,19 @@ export default function Navbar() {
 
   const navLinks = session
     ? [
-        { name: "Home", href: "/", icon: Home },
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-        { name: "MillData", href: "/mill-data", icon: Database },
-        { name: "InsertData", href: "/mill-data/create", icon: PlusSquare },
-        { name: "About", href: "/about", icon: Users },
-        { name: "Contact Us", href: "/contact-us", icon: MessageCircleDashed },
-      ]
+      { name: "Home", href: "/", icon: Home },
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "MillData", href: "/mill-data", icon: Database },
+      { name: "Ledger", href: "/grinding-ledger", icon: NotebookTextIcon },
+      { name: "InsertData", href: "/mill-data/create", icon: PlusSquare },
+      { name: "About", href: "/about", icon: Users },
+      { name: "Contact Us", href: "/contact-us", icon: MessageCircleDashed },
+    ]
     : [
-        { name: "Home", href: "/", icon: Home },
-        { name: "About", href: "/about", icon: Users },
-        { name: "Contact Us", href: "/contact-us", icon: MessageCircleDashed },
-      ];
+      { name: "Home", href: "/", icon: Home },
+      { name: "About", href: "/about", icon: Users },
+      { name: "Contact Us", href: "/contact-us", icon: MessageCircleDashed },
+    ];
 
   const handleLogout = async () => {
     setMobileOpen(false);
@@ -93,11 +94,10 @@ export default function Navbar() {
               href={link.href}
               className={`
                   px-3 py-2 text-sm tracking-wider rounded-md font-medium transition-all duration-200
-                  ${
-                    isActive(link.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                  }
+                  ${isActive(link.href)
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                }
                 `}
             >
               {link.name}
@@ -143,11 +143,10 @@ export default function Navbar() {
                         onClick={() => setMobileOpen(false)}
                         className={`
                               flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-                              ${
-                                isActive(link.href)
-                                  ? "bg-primary/10 text-primary"
-                                  : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
-                              }
+                              ${isActive(link.href)
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                          }
                             `}
                       >
                         <Icon className="h-4 w-4" />
