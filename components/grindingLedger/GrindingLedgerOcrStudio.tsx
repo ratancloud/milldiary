@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import {
   Loader2,
@@ -14,6 +14,9 @@ import {
   CalendarIcon,
   AlertTriangle,
   Edit,
+  ChevronDown,
+  Search,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +47,345 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formateIndDate } from "@/lib/helper";
 
+// ─── Master Village List (synced with backend) ──────────────────────────────
+const MASTER_VILLAGES: { en: string; hi: string }[] = [
+  { en: "Agiaon Bazar", hi: "अगिऑँव बाजार" },
+  { en: "Chhawani", hi: "छवनी" },
+  { en: "Amehta", hi: "अमेहता" },
+  { en: "Nadhi", hi: "नाढ़ी" },
+  { en: "Dhanpura", hi: "धनपुरा" },
+  { en: "Pitro", hi: "पिटरो" },
+  { en: "Jogradih", hi: "जोगराडिह" },
+  { en: "Salakhna", hi: "सलाखना" },
+  { en: "Baghaur Narayanpur", hi: "बघउड़ नारायणपुर" },
+  { en: "Hathdihan", hi: "हथडिहाँ" },
+  { en: "Anua", hi: "अनुआ" },
+  { en: "Tiwari Dih", hi: "तिवारी डिह" },
+  { en: "Parmanpur", hi: "प्रमाण पुर" },
+  { en: "Pachfhedwa", hi: "पांचफ़ेडवा" },
+  { en: "Dehri Tola", hi: "डिहरी टोला" },
+  { en: "Latthan", hi: "लट्ठान" },
+  { en: "Pipra Dih", hi: "पिपरा डिह" },
+  { en: "Koath", hi: "कोआथ" },
+  { en: "Kothuwa", hi: "कोठुआ" },
+  { en: "Baroda Tola", hi: "बड़ौडा टोला" },
+  { en: "Gogsar", hi: "गोगसड़" },
+  { en: "Moti Dih", hi: "मोति डिह" },
+  { en: "Telar", hi: "तेलाड़" },
+  { en: "Prema Rai Ke Tola", hi: "प्रेमा राय के टोला" },
+  { en: "Chimni Par", hi: "चिमनी पर" },
+  { en: "Ganpat Tola", hi: "गणपत टोला"}
+];
+
+// ─── VillageAutocomplete Component ──────────────────────────────────────────
+interface VillageAutocompleteProps {
+  value: string;
+  lang: "en" | "hi";
+  onChange: (en: string, hi: string) => void;
+  className?: string;
+  placeholder?: string;
+}
+
+const VillageAutocomplete: React.FC<VillageAutocompleteProps> = ({
+  value,
+  lang,
+  onChange,
+  className = "",
+  placeholder,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [isCustom, setIsCustom] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Check if current value is in master list
+  const isInMasterList = MASTER_VILLAGES.some(
+    (v) => (lang === "en" ? v.en : v.hi) === value
+  );
+
+  // Filter villages based on search
+  const filtered = search.trim()
+    ? MASTER_VILLAGES.filter((v) => {
+      const target = lang === "en" ? v.en : v.hi;
+      return target.toLowerCase().includes(search.toLowerCase());
+    })
+    : MASTER_VILLAGES;
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setSearch("");
+        setIsCustom(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (village: { en: string; hi: string }) => {
+    onChange(village.en, village.hi);
+    setIsOpen(false);
+    setSearch("");
+    setIsCustom(false);
+  };
+
+  const handleCustomConfirm = () => {
+    if (search.trim()) {
+      if (lang === "en") {
+        onChange(search.trim(), value); // keep current hi, update en
+      } else {
+        onChange(value, search.trim()); // keep current en, update hi
+      }
+    }
+    setIsOpen(false);
+    setSearch("");
+    setIsCustom(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setSearch("");
+          setIsCustom(false);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }}
+        className={`flex items-center justify-between w-full border border-input bg-background text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/40 ${className} ${!isInMasterList && value ? "ring-1 ring-amber-500/50" : ""
+          }`}
+      >
+        <span className={`truncate ${!value ? "text-muted-foreground" : ""}`}>
+          {value || placeholder || "Select village..."}
+        </span>
+        <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0 ml-1" />
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Search input */}
+          <div className="p-1.5 border-b border-border/60">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setIsCustom(false);
+                }}
+                placeholder={lang === "en" ? "Type to search..." : "खोजें..."}
+                className="w-full h-7 pl-6 pr-2 text-xs bg-muted/40 border-0 rounded-md outline-none focus:ring-1 focus:ring-primary/40"
+                autoFocus
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2"
+                >
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Options list */}
+          <div className="max-h-[180px] overflow-y-auto">
+            {filtered.length > 0 ? (
+              filtered.map((v, i) => {
+                const displayText = lang === "en" ? v.en : v.hi;
+                const subText = lang === "en" ? v.hi : v.en;
+                const isSelected = displayText === value;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleSelect(v)}
+                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors hover:bg-primary/10 ${isSelected ? "bg-primary/10 font-bold" : ""
+                      }`}
+                  >
+                    <span className="truncate">{displayText}</span>
+                    <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[80px]">
+                      {subText}
+                    </span>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-3 py-3 text-xs text-muted-foreground text-center">
+                No matching village found
+              </div>
+            )}
+          </div>
+
+          {/* Custom option — always shown at bottom */}
+          <div className="border-t border-border/60">
+            {!isCustom ? (
+              <button
+                type="button"
+                onClick={() => setIsCustom(true)}
+                className="w-full text-left px-3 py-2 text-xs text-amber-600 dark:text-amber-400 font-semibold hover:bg-amber-500/10 flex items-center gap-1.5 transition-colors"
+              >
+                <Edit className="w-3 h-3" />
+                Custom Village (type your own)
+              </button>
+            ) : (
+              <div className="p-1.5 flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCustomConfirm()}
+                  placeholder={lang === "en" ? "Type custom village..." : "कस्टम गाँव लिखें..."}
+                  className="flex-1 h-7 px-2 text-xs border border-input rounded-md outline-none focus:ring-1 focus:ring-primary/40 bg-background"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleCustomConfirm}
+                  disabled={!search.trim()}
+                  className="h-7 px-2 text-xs rounded-md"
+                >
+                  OK
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── OCR Scanning Animation Component ───────────────────────────────────────
+const OcrScanningAnimation: React.FC<{ imageSrc: string | null }> = ({ imageSrc }) => {
+  const [scanProgress, setScanProgress] = useState(0);
+  const [statusText, setStatusText] = useState("Preparing image...");
+
+  useEffect(() => {
+    const steps = [
+      { at: 5, text: "Enhancing image contrast..." },
+      { at: 15, text: "Detecting handwritten text regions..." },
+      { at: 30, text: "Reading customer names..." },
+      { at: 45, text: "Identifying village abbreviations..." },
+      { at: 60, text: "Extracting weight values..." },
+      { at: 75, text: "Mapping villages to master list..." },
+      { at: 88, text: "Validating extracted data..." },
+      { at: 95, text: "Finalizing JSON output..." },
+    ];
+
+    const interval = setInterval(() => {
+      setScanProgress((prev) => {
+        const next = Math.min(prev + 0.6 + Math.random() * 0.8, 98);
+        const step = steps.findLast((s) => s.at <= next);
+        if (step) setStatusText(step.text);
+        return next;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center space-y-6 py-8 px-4 max-w-md mx-auto w-full">
+      {/* Animated scanner container */}
+      <div className="relative w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-2xl shadow-amber-500/10 bg-muted/30">
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt="Scanning..."
+            className="w-full h-full object-cover opacity-60"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-muted/40 to-muted/80 flex items-center justify-center">
+            <FileText className="w-16 h-16 text-muted-foreground/30" />
+          </div>
+        )}
+
+        {/* Scanning line effect */}
+        <div
+          className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-lg shadow-amber-500/60"
+          style={{
+            top: `${scanProgress}%`,
+            transition: "top 0.1s linear",
+          }}
+        />
+
+        {/* Glow overlay above scan line */}
+        <div
+          className="absolute left-0 right-0 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none"
+          style={{
+            top: 0,
+            height: `${scanProgress}%`,
+            transition: "height 0.1s linear",
+          }}
+        />
+
+        {/* Corner brackets */}
+        <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-amber-500 rounded-tl-md" />
+        <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-amber-500 rounded-tr-md" />
+        <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-amber-500 rounded-bl-md" />
+        <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-amber-500 rounded-br-md" />
+
+        {/* Floating detected text lines (fake OCR detections) */}
+        <div className="absolute inset-0 pointer-events-none">
+          {scanProgress > 20 && (
+            <div className="absolute top-[18%] left-[10%] right-[15%] h-3 rounded bg-amber-500/15 border border-amber-500/30 animate-pulse" />
+          )}
+          {scanProgress > 35 && (
+            <div className="absolute top-[30%] left-[8%] right-[20%] h-3 rounded bg-amber-500/15 border border-amber-500/30 animate-pulse" style={{ animationDelay: "0.3s" }} />
+          )}
+          {scanProgress > 50 && (
+            <div className="absolute top-[44%] left-[12%] right-[10%] h-3 rounded bg-amber-500/15 border border-amber-500/30 animate-pulse" style={{ animationDelay: "0.6s" }} />
+          )}
+          {scanProgress > 65 && (
+            <div className="absolute top-[58%] left-[9%] right-[18%] h-3 rounded bg-amber-500/15 border border-amber-500/30 animate-pulse" style={{ animationDelay: "0.9s" }} />
+          )}
+          {scanProgress > 80 && (
+            <div className="absolute top-[72%] left-[11%] right-[14%] h-3 rounded bg-amber-500/15 border border-amber-500/30 animate-pulse" style={{ animationDelay: "1.2s" }} />
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-[280px] space-y-2">
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-200 ease-out"
+            style={{ width: `${scanProgress}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+            <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+            {statusText}
+          </span>
+          <span className="font-mono font-bold text-amber-600 tabular-nums">
+            {Math.round(scanProgress)}%
+          </span>
+        </div>
+      </div>
+
+      {/* Pulsing Gemini branding */}
+      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20">
+        <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+          Gemini AI is analyzing your handwriting...
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 interface ExtractedRow {
   serialNo: number;
   customerNameEn: string;
@@ -65,7 +407,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   onCancel,
   onDirtyChange,
 }) => {
-  const [step, setStep] = useState<"upload" | "review">("upload");
+  const [step, setStep] = useState<"upload" | "scanning" | "review">("upload");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [enhancedImageUrl, setEnhancedImageUrl] = useState<string | null>(null);
@@ -81,6 +423,9 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<"cancel" | "reset" | null>(null);
+
+  // Delete confirmation
+  const [deleteRowIdx, setDeleteRowIdx] = useState<number | null>(null);
 
   useEffect(() => {
     onDirtyChange?.(step === "review" && records.length > 0);
@@ -129,6 +474,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     }
 
     setIsExtracting(true);
+    setStep("scanning"); // Show scanning animation
     const formData = new FormData();
     formData.append("image", imageFile);
 
@@ -153,6 +499,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
       toast.success(`Extracted ${result.records?.length || 0} rows successfully!`);
     } catch (error: any) {
       toast.error(error.message || "OCR Extraction Failed");
+      setStep("upload"); // Go back to upload on error
     } finally {
       setIsExtracting(false);
     }
@@ -170,10 +517,31 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     });
   };
 
-  const handleDeleteRow = (index: number) => {
-    setRecords((prev) => prev.filter((_, idx) => idx !== index));
-    if (editingCardIdx === index) {
-      setEditingCardIdx(null);
+  // Special handler for village autocomplete — updates both en & hi together
+  const handleVillageChange = useCallback(
+    (index: number, en: string, hi: string) => {
+      setRecords((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], villageEn: en, villageHi: hi };
+        return updated;
+      });
+    },
+    []
+  );
+
+  // Opens the delete confirmation dialog
+  const handleAttemptDelete = (index: number) => {
+    setDeleteRowIdx(index);
+  };
+
+  // Actually deletes after confirmation
+  const handleConfirmDelete = () => {
+    if (deleteRowIdx !== null) {
+      setRecords((prev) => prev.filter((_, idx) => idx !== deleteRowIdx));
+      if (editingCardIdx === deleteRowIdx) {
+        setEditingCardIdx(null);
+      }
+      setDeleteRowIdx(null);
     }
   };
 
@@ -267,7 +635,8 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
         )}
       </div>
 
-      {step === "upload" ? (
+      {/* ── Step 1: Upload ────────────────────────────────────────────────── */}
+      {step === "upload" && (
         <div className="py-6 flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
             <div className="space-y-1.5">
@@ -358,8 +727,9 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </div>
             )}
           </div>
-          {/* make mobile responsive */}
-          <div className="flex flex-col sm:flex-row items-center justify-end sm:justify-between gap-3 w-full pt-2">
+
+          {/* Buttons — fully mobile responsive */}
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 w-full pt-2">
             <Button
               type="button"
               variant="outline"
@@ -371,24 +741,23 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             <Button
               onClick={handleRunOcr}
               disabled={!imageFile || isExtracting}
-              className="flex-1 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-bold h-12 rounded-xl text-base shadow-lg shadow-amber-500/20 gap-2"
+              className="w-full sm:flex-1 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-bold h-12 rounded-xl text-sm sm:text-base shadow-lg shadow-amber-500/20 gap-2"
             >
-              {isExtracting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Analyzing Handwriting with Gemini AI...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  Convert Image to Grinding Ledger JSON
-                </>
-              )}
+              <Sparkles className="w-5 h-5" />
+              <span className="hidden sm:inline">Convert Image to Grinding Ledger JSON</span>
+              <span className="sm:hidden">Convert to JSON</span>
             </Button>
           </div>
         </div>
-      ) : (
-        /* Step 2: Side-by-Side Review and Edit */
+      )}
+
+      {/* ── Step 1.5: Scanning Animation ─────────────────────────────────── */}
+      {step === "scanning" && (
+        <OcrScanningAnimation imageSrc={imagePreviewUrl} />
+      )}
+
+      {/* ── Step 2: Review ───────────────────────────────────────────────── */}
+      {step === "review" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden pt-2">
           {/* Left: Image Viewer */}
           <div className="lg:col-span-5 flex flex-col border border-border/80 rounded-2xl overflow-hidden bg-muted/20 min-h-[350px]">
@@ -428,6 +797,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </Button>
             </div>
 
+            {/* ── Desktop Table ──────────────────────────────────────────── */}
             <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[520px]">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
@@ -435,7 +805,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                     <th className="p-2 w-12 text-center">S.No</th>
                     <th className="p-2">English Name</th>
                     <th className="p-2">Hindi Name</th>
-                    <th className="p-2">Village (En / Hi)</th>
+                    <th className="p-2 min-w-[180px]">Village (En / Hi)</th>
                     <th className="p-2 w-20 text-right">Weight</th>
                     <th className="p-2 w-16 text-center">Conf</th>
                     <th className="p-2 w-10 text-center">Del</th>
@@ -469,17 +839,19 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                       </td>
                       <td className="p-1">
                         <div className="flex flex-col gap-1">
-                          <Input
+                          <VillageAutocomplete
                             value={row.villageEn}
-                            onChange={(e) => handleRowChange(idx, "villageEn", e.target.value)}
-                            placeholder="English Village"
+                            lang="en"
+                            onChange={(en, hi) => handleVillageChange(idx, en, hi)}
                             className="h-7 text-xs px-2 rounded-lg"
+                            placeholder="English Village"
                           />
-                          <Input
+                          <VillageAutocomplete
                             value={row.villageHi}
-                            onChange={(e) => handleRowChange(idx, "villageHi", e.target.value)}
-                            placeholder="Hindi Village"
+                            lang="hi"
+                            onChange={(en, hi) => handleVillageChange(idx, en, hi)}
                             className="h-7 text-xs px-2 font-hindi text-muted-foreground rounded-lg"
+                            placeholder="Hindi Village"
                           />
                         </div>
                       </td>
@@ -510,7 +882,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteRow(idx)}
+                          onClick={() => handleAttemptDelete(idx)}
                           className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
                           title="Remove row"
                         >
@@ -523,7 +895,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               </table>
             </div>
 
-            {/* Mobile Responsive Cards View */}
+            {/* ── Mobile Cards ───────────────────────────────────────────── */}
             <div className="block md:hidden flex-1 overflow-y-auto p-3 max-h-[520px] space-y-3">
               {records.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground text-xs">
@@ -602,7 +974,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleDeleteRow(idx)}
+                                onClick={() => handleAttemptDelete(idx)}
                                 className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg shrink-0"
                                 title="Remove row"
                               >
@@ -615,6 +987,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                     );
                   }
 
+                  // ── Mobile Edit Card ──────────────────────────────────
                   return (
                     <div
                       key={idx}
@@ -647,7 +1020,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteRow(idx)}
+                            onClick={() => handleAttemptDelete(idx)}
                             className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
                             title="Remove row"
                           >
@@ -684,23 +1057,29 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                               Village (En)
                             </Label>
-                            <Input
-                              value={row.villageEn}
-                              onChange={(e) => handleRowChange(idx, "villageEn", e.target.value)}
-                              placeholder="English Village"
-                              className="h-9 text-xs rounded-lg mt-1 bg-background"
-                            />
+                            <div className="mt-1">
+                              <VillageAutocomplete
+                                value={row.villageEn}
+                                lang="en"
+                                onChange={(en, hi) => handleVillageChange(idx, en, hi)}
+                                className="h-9 text-xs rounded-lg bg-background px-2"
+                                placeholder="English Village"
+                              />
+                            </div>
                           </div>
                           <div>
                             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi">
                               Village (Hi) - गाँव
                             </Label>
-                            <Input
-                              value={row.villageHi}
-                              onChange={(e) => handleRowChange(idx, "villageHi", e.target.value)}
-                              placeholder="Hindi Village"
-                              className="h-9 text-xs font-hindi rounded-lg mt-1 bg-background text-muted-foreground"
-                            />
+                            <div className="mt-1">
+                              <VillageAutocomplete
+                                value={row.villageHi}
+                                lang="hi"
+                                onChange={(en, hi) => handleVillageChange(idx, en, hi)}
+                                className="h-9 text-xs font-hindi rounded-lg bg-background text-muted-foreground px-2"
+                                placeholder="Hindi Village"
+                              />
+                            </div>
                           </div>
                         </div>
                         <div>
@@ -747,7 +1126,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                 for <span className="font-bold text-amber-600">{commodityType}</span> on{" "}
                 <span className="font-bold text-foreground">{date}</span>.
               </div>
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2">
                 <Button variant="outline" onClick={handleAttemptCancel} disabled={isSaving} className="h-10 px-4 rounded-xl font-semibold">
                   Cancel
                 </Button>
@@ -794,6 +1173,38 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
             >
               Yes, Discard Records
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Row Confirmation Dialog */}
+      <AlertDialog open={deleteRowIdx !== null} onOpenChange={(open) => !open && setDeleteRowIdx(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-500">
+              <Trash2 className="w-5 h-5 shrink-0" />
+              Delete This Record?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              {deleteRowIdx !== null && records[deleteRowIdx] ? (
+                <>
+                  Are you sure you want to delete <strong>S.No {records[deleteRowIdx].serialNo}</strong> — <strong>{records[deleteRowIdx].customerNameHi || records[deleteRowIdx].customerNameEn}</strong> ({records[deleteRowIdx].villageEn}, {records[deleteRowIdx].weight} kg)? This action cannot be undone.
+                </>
+              ) : (
+                "Are you sure you want to delete this record? This action cannot be undone."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2 sm:gap-0">
+            <AlertDialogCancel onClick={() => setDeleteRowIdx(null)}>
+              No, Keep It
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              Yes, Delete Record
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -19,6 +19,7 @@ export default async function proxy(req: NextRequest) {
     "/mill-data",
     "/mill-data/create",
     "/mill-data/edit",
+    "/grinding-ledger",
   ];
 
   const isPrivateRoute = privateRoutePrefixes.some((route) =>

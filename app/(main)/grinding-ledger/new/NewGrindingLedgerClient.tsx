@@ -21,7 +21,7 @@ import {
 export default function NewGrindingLedgerClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialMode = searchParams.get("mode") === "ocr" ? "ocr" : "manual";
+  const initialMode = searchParams.get("mode") === "manual" ? "manual" : "ocr";
   const [activeTab, setActiveTab] = useState<"manual" | "ocr">(initialMode);
   const queryClient = useQueryClient();
 
