@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   CalendarIcon,
   Edit,
+  Cpu,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -50,6 +52,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formateIndDate } from "@/lib/helper";
 
+interface OcrMeta {
+  totalRows: number;
+  modelUsed: string;
+  inputToken: number;
+  outputToken: number;
+  totalToken: number;
+}
+
 interface ExtractedRow {
   serialNo: number;
   customerNameEn: string;
@@ -82,6 +92,7 @@ const GrindingLedgerOcrModal: React.FC<GrindingLedgerOcrModalProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [commodityType, setCommodityType] = useState<"WHEAT" | "MUSTARD">("WHEAT");
   const [records, setRecords] = useState<ExtractedRow[]>([]);
+  const [ocrMeta, setOcrMeta] = useState<OcrMeta | null>(null);
   const [editingCardIdx, setEditingCardIdx] = useState<number | null>(null);
 
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -149,6 +160,9 @@ const GrindingLedgerOcrModal: React.FC<GrindingLedgerOcrModalProps> = ({
       setRecords(result.records || []);
       if (result.enhancedImage) {
         setEnhancedImageUrl(result.enhancedImage);
+      }
+      if (result.meta) {
+        setOcrMeta(result.meta);
       }
       setEditingCardIdx(null);
       setStep("review");
@@ -244,6 +258,7 @@ const GrindingLedgerOcrModal: React.FC<GrindingLedgerOcrModalProps> = ({
     setImagePreviewUrl(null);
     setEnhancedImageUrl(null);
     setRecords([]);
+    setOcrMeta(null);
     setEditingCardIdx(null);
   };
 
@@ -395,6 +410,47 @@ const GrindingLedgerOcrModal: React.FC<GrindingLedgerOcrModalProps> = ({
                   {commodityType === "WHEAT" ? "Wheat" : "Mustard"} — {date}
                 </Badge>
               </div>
+
+              {/* ── AI Response Meta ─────────────────────────────────── */}
+              {ocrMeta && (
+                <div className="px-3 py-2 bg-gradient-to-r from-amber-500/5 via-yellow-500/5 to-amber-500/5 border-b border-amber-500/20">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Cpu className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                      AI Response Meta
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">Model</span>
+                      <span className="font-semibold text-foreground font-mono truncate ml-1 max-w-[120px]" title={ocrMeta.modelUsed}>
+                        {ocrMeta.modelUsed}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">Rows</span>
+                      <span className="font-bold text-foreground tabular-nums">{ocrMeta.totalRows}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground flex items-center gap-0.5">
+                        <Zap className="w-2.5 h-2.5 text-blue-500" /> Input
+                      </span>
+                      <span className="font-mono font-semibold text-foreground tabular-nums">{ocrMeta.inputToken?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground flex items-center gap-0.5">
+                        <Zap className="w-2.5 h-2.5 text-green-500" /> Output
+                      </span>
+                      <span className="font-mono font-semibold text-foreground tabular-nums">{ocrMeta.outputToken?.toLocaleString()}</span>
+                    </div>
+                    <div className="col-span-2 flex items-center justify-between text-[10px] pt-1 border-t border-border/40">
+                      <span className="text-muted-foreground font-semibold">Total Tokens</span>
+                      <span className="font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums">{ocrMeta.totalToken?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/5 dark:bg-black/40">
                 <img
                   src={enhancedImageUrl || imagePreviewUrl || ""}

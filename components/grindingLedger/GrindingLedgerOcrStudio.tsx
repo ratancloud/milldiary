@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Cpu, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   Loader2,
@@ -47,6 +48,39 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formateIndDate } from "@/lib/helper";
 
+// types
+interface OcrMeta {
+  totalRows: number;
+  modelUsed: string;
+  inputToken: number;
+  outputToken: number;
+  totalToken: number;
+}
+
+interface ExtractedRow {
+  serialNo: number;
+  customerNameEn: string;
+  customerNameHi: string;
+  villageEn: string;
+  villageHi: string;
+  weight: number;
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+}
+
+interface GrindingLedgerOcrStudioProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+}
+
+interface VillageAutocompleteProps {
+  value: string;
+  lang: "en" | "hi";
+  onChange: (en: string, hi: string) => void;
+  className?: string;
+  placeholder?: string;
+}
+
 // ─── Master Village List (synced with backend) ──────────────────────────────
 const MASTER_VILLAGES: { en: string; hi: string }[] = [
   { en: "Agiaon Bazar", hi: "अगिऑँव बाजार" },
@@ -74,17 +108,8 @@ const MASTER_VILLAGES: { en: string; hi: string }[] = [
   { en: "Telar", hi: "तेलाड़" },
   { en: "Prema Rai Ke Tola", hi: "प्रेमा राय के टोला" },
   { en: "Chimni Par", hi: "चिमनी पर" },
-  { en: "Ganpat Tola", hi: "गणपत टोला"}
+  { en: "Ganpat Tola", hi: "गणपत टोला" }
 ];
-
-// ─── VillageAutocomplete Component ──────────────────────────────────────────
-interface VillageAutocompleteProps {
-  value: string;
-  lang: "en" | "hi";
-  onChange: (en: string, hi: string) => void;
-  className?: string;
-  placeholder?: string;
-}
 
 const VillageAutocomplete: React.FC<VillageAutocompleteProps> = ({
   value,
@@ -385,23 +410,6 @@ const OcrScanningAnimation: React.FC<{ imageSrc: string | null }> = ({ imageSrc 
   );
 };
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-interface ExtractedRow {
-  serialNo: number;
-  customerNameEn: string;
-  customerNameHi: string;
-  villageEn: string;
-  villageHi: string;
-  weight: number;
-  confidence: "HIGH" | "MEDIUM" | "LOW";
-}
-
-interface GrindingLedgerOcrStudioProps {
-  onSuccess: () => void;
-  onCancel: () => void;
-  onDirtyChange?: (isDirty: boolean) => void;
-}
-
 const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   onSuccess,
   onCancel,
@@ -418,6 +426,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [commodityType, setCommodityType] = useState<"WHEAT" | "MUSTARD">("WHEAT");
   const [records, setRecords] = useState<ExtractedRow[]>([]);
+  const [ocrMeta, setOcrMeta] = useState<OcrMeta | null>(null);
   const [editingCardIdx, setEditingCardIdx] = useState<number | null>(null);
 
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -493,6 +502,9 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
       setRecords(result.records || []);
       if (result.enhancedImage) {
         setEnhancedImageUrl(result.enhancedImage);
+      }
+      if (result.meta) {
+        setOcrMeta(result.meta);
       }
       setEditingCardIdx(null);
       setStep("review");
@@ -608,6 +620,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     setImagePreviewUrl(null);
     setEnhancedImageUrl(null);
     setRecords([]);
+    setOcrMeta(null);
     setEditingCardIdx(null);
   };
 
@@ -769,7 +782,48 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                 {commodityType === "WHEAT" ? "Wheat" : "Mustard"} — {date}
               </Badge>
             </div>
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/5 dark:bg-black/40 max-h-[600px]">
+
+            {/* ── AI Response Meta ─────────────────────────────────── */}
+            {ocrMeta && (
+              <div className="px-3 py-2 bg-gradient-to-r from-amber-500/5 via-yellow-500/5 to-amber-500/5 border-b border-amber-500/20">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Cpu className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                    AI Response Meta
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground">Model</span>
+                    <span className="font-semibold text-foreground font-mono truncate ml-1 max-w-[120px]" title={ocrMeta.modelUsed}>
+                      {ocrMeta.modelUsed}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground">Rows</span>
+                    <span className="font-bold text-foreground tabular-nums">{ocrMeta.totalRows}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground flex items-center gap-0.5">
+                      <Zap className="w-2.5 h-2.5 text-blue-500" /> Input
+                    </span>
+                    <span className="font-mono font-semibold text-foreground tabular-nums">{ocrMeta.inputToken?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground flex items-center gap-0.5">
+                      <Zap className="w-2.5 h-2.5 text-green-500" /> Output
+                    </span>
+                    <span className="font-mono font-semibold text-foreground tabular-nums">{ocrMeta.outputToken?.toLocaleString()}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center justify-between text-[10px] pt-1 border-t border-border/40">
+                    <span className="text-muted-foreground font-semibold">Total Tokens</span>
+                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums">{ocrMeta.totalToken?.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-auto p-2 flex items-center justify-center bg-black/5 dark:bg-black/40 max-h-[600px]">
               <img
                 src={enhancedImageUrl || imagePreviewUrl || ""}
                 alt="OCR Enhanced Register Sheet"
@@ -798,7 +852,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             </div>
 
             {/* ── Desktop Table ──────────────────────────────────────────── */}
-            <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[520px]">
+            <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[615px]">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b bg-muted/40 font-bold text-muted-foreground">
