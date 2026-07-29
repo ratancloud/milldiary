@@ -471,6 +471,10 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error("Image size must be less than 4MB");
+        return;
+      }
       setImageFile(file);
       setImagePreviewUrl(URL.createObjectURL(file));
     }
@@ -626,11 +630,11 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-6">
-      <div className="flex items-center justify-between border-b border-border/60 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
         <div>
           <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 bg-gradient-to-r from-amber-600 to-yellow-500 bg-clip-text text-transparent">
-            <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
-            AI OCR Image-to-JSON Convertor
+            <Sparkles className="h-5 w-5 text-amber-500 animate-pulse shrink-0" />
+            <span className="truncate">AI OCR Image-to-JSON Convertor</span>
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Upload a handwritten register sheet. Gemini AI converts handwriting into editable rows for bulk database insertion.
@@ -641,7 +645,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             variant="outline"
             size="sm"
             onClick={handleAttemptReset}
-            className="text-xs font-semibold rounded-xl h-9"
+            className="text-xs font-semibold rounded-xl h-9 w-full sm:w-auto shrink-0"
           >
             ← Upload Another Sheet
           </Button>

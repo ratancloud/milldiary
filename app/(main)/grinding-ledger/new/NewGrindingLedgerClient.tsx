@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, PlusSquare, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,21 @@ import {
 
 export default function NewGrindingLedgerClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialMode = searchParams.get("mode") === "manual" ? "manual" : "ocr";
-  const [activeTab, setActiveTab] = useState<"manual" | "ocr">(initialMode);
+  const [activeTab, setActiveTab] = useState<"manual" | "ocr">("ocr");
   const queryClient = useQueryClient();
 
   const [isOcrDirty, setIsOcrDirty] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingTab, setPendingTab] = useState<"manual" | "ocr" | "back" | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("mode") === "manual") {
+        setActiveTab("manual");
+      }
+    }
+  }, []);
 
   const handleSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["grindingLedger"] });
@@ -64,22 +71,22 @@ export default function NewGrindingLedgerClient() {
   return (
     <div className="container max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
-        <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/80 pb-4 mb-2">
+        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
           <Button
             variant="outline"
             size="icon"
             onClick={() => handleAttemptNavigate("back")}
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl shrink-0"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl shrink-0 mt-0.5 sm:mt-0"
             title="Back to Ledger"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
           <div>
-            <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight text-foreground leading-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground leading-tight">
               New Grinding Ledger Entry
             </h1>
-            <p className="text-[11px] sm:text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Select how you want to add new customer slips today.
             </p>
           </div>
