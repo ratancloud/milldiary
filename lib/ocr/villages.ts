@@ -11,6 +11,7 @@ export const MASTER_VILLAGES: VillageEntry[] = [
     { en: 'Nadhi', hi: 'नाढ़ी', aliases: ['नाड़ी', 'नाधी', 'ना०'] },
     { en: 'Dhanpura', hi: 'धनपुरा', aliases: ['धनपूरा', 'ध०'] },
     { en: 'Pitro', hi: 'पिटरो', aliases: ['पीटरो', 'पि०'] },
+    { en: 'Puraini', hi: 'पुरैनी', aliases: ['पुरेनी', 'पुरैनी'] },
     { en: 'Jogradih', hi: 'जोगराडिह', aliases: ['जोगरा डिह', 'जो०', 'Jo.'] },
     { en: 'Salakhna', hi: 'सलाखना', aliases: ['सलखना', 'स०'] },
     { en: 'Baghaur Narayanpur', hi: 'बघउड़ नारायणपुर', aliases: ['ब०', 'न०', 'बघउड़', 'नारायणपुर', 'बघउर', 'बघउर नारायणपुर'] },
@@ -18,7 +19,7 @@ export const MASTER_VILLAGES: VillageEntry[] = [
     { en: 'Anua', hi: 'अनुआ', aliases: ['अनुवा', 'अ०नु०'] },
     { en: 'Tiwari Dih', hi: 'तिवारी डिह', aliases: ['ति०', 'तिवारीडिह', 'तिवारी'] },
     { en: 'Parmanpur', hi: 'प्रमाण पुर', aliases: ['परमानपुर', 'प्रमाणपुर', 'प०', 'Parman Pur'] },
-    { en: 'Pachfhedwa', hi: 'पांचफ़ेडवा', aliases: ['पांचफेडवा', 'पाँचफेडवा', 'पां०'] },
+    { en: 'Pachphedwa', hi: 'पांचफ़ेडवा', aliases: ['पांचफेडवा', 'पाँचफेडवा', 'पां०'] },
     { en: 'Dehri Tola', hi: 'डिहरी टोला', aliases: ['डिहरीटोला', 'डी०'] },
     { en: 'Latthan', hi: 'लट्ठान', aliases: ['लठान', 'ल०'] },
     { en: 'Pipra Dih', hi: 'पिपरा डिह', aliases: ['पिपराडिह', 'पि०डि०'] },
@@ -31,6 +32,20 @@ export const MASTER_VILLAGES: VillageEntry[] = [
     { en: 'Prema Rai Ke Tola', hi: 'प्रेमा राय के टोला', aliases: ['प्रेमा राय', 'प्रेमा राय टोला', 'प्रे०'] },
     { en: 'Chimni Par', hi: 'चिमनी पर', aliases: ['चिमनीपर', 'चि०'] },
     { en: 'Ganpat Tola', hi: 'गणपत टोला', aliases: ['गणपतटोला', 'ग०टो०'] },
+    { en: 'Puraini', hi: 'पुरैनी', aliases: ['पुरैनी'] },
+    { en: 'Nawadih', hi: 'नवाड़ीह', aliases: ['नवाडीह', 'नवा डीह'] },
+    { en: 'Basdiha', hi: 'बसडीहाँ', aliases: ['बसडीहा', 'बस डीहा'] },
+    { en: 'Pitath', hi: 'पिटाठ', aliases: ['पिठाठ', 'पिटाठ'] },
+    { en: 'Jagdishpur', hi: 'जगदिशपुर', aliases: ['जगदीशपुर', 'जगदिश पुर'] },
+    { en: 'Ganeshi Tola', hi: 'गणेशी टोला', aliases: ['गणेशीटोला', 'ग० टोला'] },
+    { en: 'Jagdepur', hi: 'जगदेपुर', aliases: ['जगदेवपुर', 'जगदे पुर'] },
+    { en: 'Gidha', hi: 'गिधा', aliases: ['गिधा', 'गिध'] },
+    { en: 'Shugibal', hi: 'शुगीबाल', aliases: ['शुगी बाल', 'सुगीबाल'] },
+    { en: 'Snehi Tola', hi: 'सनेही टोला', aliases: ['सनेहीटोला', 'स्नेही टोला', 'स्नेहीटोला'] },
+    { en: 'Suryapura', hi: 'सूर्यपुरा', aliases: ['सुर्यपुरा', 'सूर्य पुरा'] },
+    { en: 'Kewatiya', hi: 'केवटिया', aliases: ['केवटिया'] },
+    { en: 'Shugibal', hi: 'शुगिबाल', aliases: ['शुगि बाल', 'सुगिबाल'] },
+    { en: 'Katariya', hi: 'कटरीया', aliases: ['कटरिया', 'कटरीया'] }
 ];
 
 // Pre-build O(1) Lookup Maps

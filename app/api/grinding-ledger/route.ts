@@ -9,7 +9,7 @@ import {
   createGrindingLedgerValidator,
   insertManyGrindingLedgerValidator,
 } from "@/lib/validators/grindingLedgerApi";
-import { CommodityType, Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
 // GET: api/grinding-ledger -> get records with filters and statistics
 export async function GET(req: NextRequest) {
@@ -23,47 +23,21 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const yearStr = searchParams.get("year");
-    const monthStr = searchParams.get("month");
     const dateStr = searchParams.get("date");
     const commodityType = searchParams.get("commodityType");
-    const search = searchParams.get("search");
 
     const where: Prisma.GrindingLedgerWhereInput = {
       userId: session.user.id,
     };
 
-    if (dateStr) {
-      where.date = new Date(dateStr);
-    } else if (yearStr && monthStr) {
-      const year = Number(yearStr);
-      const month = Number(monthStr);
-      if (year && month >= 1 && month <= 12) {
-        const start = new Date(Date.UTC(year, month - 1, 1));
-        const end = new Date(Date.UTC(year, month, 1));
-        where.date = { gte: start, lt: end };
-      }
-    } else {
-      // Default to current month if no dates specified
-      const now = new Date();
-      const start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
-      const end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
-      where.date = { gte: start, lt: end };
+    if (!dateStr || !commodityType) {
+      return apiResponseError("Date and commodity type parameters are required", 400);
     }
+
+    where.date = new Date(dateStr);
 
     if (commodityType && commodityType !== "ALL" && (commodityType === "WHEAT" || commodityType === "MUSTARD")) {
       where.commodityType = commodityType;
-    }
-
-    if (search && search.trim() !== "") {
-      const q = search.trim();
-      where.OR = [
-        { customerNameEn: { contains: q, mode: "insensitive" } },
-        { customerNameHi: { contains: q, mode: "insensitive" } },
-        { villageEn: { contains: q, mode: "insensitive" } },
-        { villageHi: { contains: q, mode: "insensitive" } },
-        ...(isNaN(Number(q)) ? [] : [{ serialNo: Number(q) }]),
-      ];
     }
 
     const items = await prisma.grindingLedger.findMany({
