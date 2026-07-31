@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const dateStr = searchParams.get("date");
     const commodityType = searchParams.get("commodityType");
+    const updatedAfter = searchParams.get("updatedAfter");
 
     const where: Prisma.GrindingLedgerWhereInput = {
       userId: session.user.id,
@@ -34,6 +35,12 @@ export async function GET(req: NextRequest) {
       where.commodityType = commodityType;
     }
 
+    if (updatedAfter) {
+      where.updatedAt = {
+        gt: new Date(updatedAfter),
+      };
+    }
+
     const items = await prisma.grindingLedger.findMany({
       where,
       orderBy: [
@@ -42,6 +49,7 @@ export async function GET(req: NextRequest) {
         { serialNo: "asc" },
       ],
     });
+    console.log("GET /mobile/grinding-ledger items:", items);
     return apiResponseSuccess(items);
   } catch (error) {
     console.error("GET /mobile/grinding-ledger error:", error);
