@@ -19,6 +19,7 @@ import {
   Search,
   X,
   Languages,
+  Camera,
 } from "lucide-react";
 import {
   Dialog,
@@ -498,39 +499,66 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             </div>
           </div>
 
-          {/* Drop zone */}
-          <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-8 w-full flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group min-h-[220px]">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="absolute inset-0 opacity-0 cursor-pointer z-10"
-            />
+          {/* Drop zone container */}
+          <div className="w-full flex flex-col gap-4">
             {imagePreviewUrl ? (
-              <div className="flex flex-col items-center space-y-3">
-                <img
-                  src={imagePreviewUrl}
-                  alt="Register sheet preview"
-                  className="max-h-64 rounded-xl shadow-md object-contain border border-border"
+              <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-8 w-full flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group min-h-[220px]">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
                 />
-                <span className="text-xs text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border">
-                  {imageFile?.name} ({Math.round((imageFile?.size || 0) / 1024)} KB)
-                </span>
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
-                  Click or drop another image to replace
-                </span>
+                <div className="flex flex-col items-center space-y-3">
+                  <img
+                    src={imagePreviewUrl}
+                    alt="Register sheet preview"
+                    className="max-h-64 rounded-xl shadow-md object-contain border border-border"
+                  />
+                  <span className="text-xs text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border">
+                    {imageFile?.name} ({Math.round((imageFile?.size || 0) / 1024)} KB)
+                  </span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
+                    Click to replace image
+                  </span>
+                </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center space-y-3 py-6">
-                <div className="p-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                  <Upload className="w-8 h-8" />
-                </div>
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[220px]">
+                <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="p-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform mb-3">
+                    <Upload className="w-8 h-8" />
+                  </div>
                   <p className="font-bold text-base text-foreground">
-                    Click to upload or drag & drop register sheet
+                    Upload from Gallery
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Supports JPG, PNG, WEBP (Handwritten Indian Flour / Oil Mill Ledgers)
+                    Drag & drop or click to browse
+                  </p>
+                </div>
+                
+                <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="p-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform mb-3">
+                    <Camera className="w-8 h-8" />
+                  </div>
+                  <p className="font-bold text-base text-foreground">
+                    Take a Photo
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Use your device camera
                   </p>
                 </div>
               </div>
