@@ -70,7 +70,7 @@ export const TransliterationInput: React.FC<TransliterationInputProps> = ({
             value={valueHi}
             onChange={(e) => onChange(e.target.value, valueEn)}
             placeholder={placeholderHi}
-            className="h-9 text-xs font-hindi pl-2.5 pr-8 rounded-lg bg-background"
+            className="h-10 text-sm font-hindi font-medium pl-2.5 pr-8 rounded-lg bg-background"
           />
           <Button
             type="button"
@@ -94,7 +94,7 @@ export const TransliterationInput: React.FC<TransliterationInputProps> = ({
             value={valueEn}
             onChange={(e) => onChange(valueHi, e.target.value)}
             placeholder={placeholderEn}
-            className="h-9 text-xs pl-2.5 pr-8 rounded-lg bg-background"
+            className="h-10 text-sm font-medium pl-2.5 pr-8 rounded-lg bg-background"
           />
           <Button
             type="button"
