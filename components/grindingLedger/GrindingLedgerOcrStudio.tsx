@@ -18,7 +18,14 @@ import {
   ChevronDown,
   Search,
   X,
+  Languages,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,237 +81,8 @@ interface GrindingLedgerOcrStudioProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
-interface VillageAutocompleteProps {
-  value: string;
-  lang: "en" | "hi";
-  onChange: (en: string | null, hi: string | null) => void;
-  className?: string;
-  placeholder?: string;
-}
-
-// ─── Master Village List (synced with backend) ──────────────────────────────
-const MASTER_VILLAGES: { en: string; hi: string }[] = [
-  { en: "Agiaon Bazar", hi: "अगिऑँव बाजार" },
-  { en: "Chhawani", hi: "छवनी" },
-  { en: "Amehta", hi: "अमेहता" },
-  { en: "Nadhi", hi: "नाढ़ी" },
-  { en: "Dhanpura", hi: "धनपुरा" },
-  { en: "Puraini", hi: "पुरैनी" },
-  { en: "Pitro", hi: "पिटरो" },
-  { en: "Jogradih", hi: "जोगराडिह" },
-  { en: "Salakhna", hi: "सलाखना" },
-  { en: "Baghaur Narayanpur", hi: "बघउड़ नारायणपुर" },
-  { en: "Hathdihan", hi: "हथडिहाँ" },
-  { en: "Anua", hi: "अनुआ" },
-  { en: "Tiwari Dih", hi: "तिवारी डिह" },
-  { en: "Parmanpur", hi: "प्रमाण पुर" },
-  { en: "Pachphedwa", hi: "पांचफ़ेडवा" },
-  { en: "Dehri Tola", hi: "डिहरी टोला" },
-  { en: "Latthan", hi: "लट्ठान" },
-  { en: "Pipra Dih", hi: "पिपरा डिह" },
-  { en: "Koath", hi: "कोआथ" },
-  { en: "Kothuwa", hi: "कोठुआ" },
-  { en: "Baroda Tola", hi: "बड़ौडा टोला" },
-  { en: "Gogsar", hi: "गोगसड़" },
-  { en: "Moti Dih", hi: "मोति डिह" },
-  { en: "Telar", hi: "तेलाड़" },
-  { en: "Prema Rai Ke Tola", hi: "प्रेमा राय के टोला" },
-  { en: "Chimni Par", hi: "चिमनी पर" },
-  { en: "Ganpat Tola", hi: "गणपत टोला" },
-  { en: 'Puraini', hi: 'पुरैनी' },
-  { en: 'Nawadih', hi: 'नवाड़ीह' },
-  { en: 'Basdiha', hi: 'बसडीहाँ' },
-  { en: 'Pitath', hi: 'पिटाठ' },
-  { en: 'Jagdishpur', hi: 'जगदिशपुर' },
-  { en: 'Ganeshi Tola', hi: 'गणेशी टोला' },
-  { en: 'Jagdepur', hi: 'जगदेपुर' },
-  { en: 'Gidha', hi: 'गिधा' },
-  { en: 'Shugibal', hi: 'शुगीबाल' },
-  { en: 'Snehi Tola', hi: 'सनेही टोला' },
-  { en: 'Suryapura', hi: 'सूर्यपुरा' },
-  { en: 'Kewatiya', hi: 'केवटिया' },
-  { en: 'Shugibal', hi: 'शुगिबाल' },
-  { en: 'Katariya', hi: 'कटरीया' }
-];
-
-const VillageAutocomplete: React.FC<VillageAutocompleteProps> = ({
-  value,
-  lang,
-  onChange,
-  className = "",
-  placeholder,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [isCustom, setIsCustom] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Check if current value is in master list
-  const isInMasterList = MASTER_VILLAGES.some(
-    (v) => (lang === "en" ? v.en : v.hi) === value
-  );
-
-  // Filter villages based on search
-  const filtered = search.trim()
-    ? MASTER_VILLAGES.filter((v) => {
-      const target = lang === "en" ? v.en : v.hi;
-      return target.toLowerCase().includes(search.toLowerCase());
-    })
-    : MASTER_VILLAGES;
-
-  // Handle click outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        setSearch("");
-        setIsCustom(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSelect = (village: { en: string; hi: string }) => {
-    onChange(village.en, village.hi);
-    setIsOpen(false);
-    setSearch("");
-    setIsCustom(false);
-  };
-
-  const handleCustomConfirm = () => {
-    if (search.trim()) {
-      if (lang === "en") {
-        onChange(search.trim(), null); // keep current hi, update en
-      } else {
-        onChange(null, search.trim()); // keep current en, update hi
-      }
-    }
-    setIsOpen(false);
-    setSearch("");
-    setIsCustom(false);
-  };
-
-  return (
-    <div ref={containerRef} className="relative">
-      {/* Trigger button */}
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setSearch("");
-          setIsCustom(false);
-          setTimeout(() => inputRef.current?.focus(), 50);
-        }}
-        className={`flex items-center justify-between w-full border border-input bg-background text-left transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/40 ${className} ${!isInMasterList && value ? "ring-1 ring-amber-500/50" : ""
-          }`}
-      >
-        <span className={`truncate ${!value ? "text-muted-foreground" : ""}`}>
-          {value || placeholder || "Select village..."}
-        </span>
-        <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0 ml-1" />
-      </button>
-
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Search input */}
-          <div className="p-1.5 border-b border-border/60">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setIsCustom(false);
-                }}
-                placeholder={lang === "en" ? "Type to search..." : "खोजें..."}
-                className="w-full h-7 pl-6 pr-2 text-xs bg-muted/40 border-0 rounded-md outline-none focus:ring-1 focus:ring-primary/40"
-                autoFocus
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2"
-                >
-                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Options list */}
-          <div className="max-h-[180px] overflow-y-auto">
-            {filtered.length > 0 ? (
-              filtered.map((v, i) => {
-                const displayText = lang === "en" ? v.en : v.hi;
-                const subText = lang === "en" ? v.hi : v.en;
-                const isSelected = displayText === value;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => handleSelect(v)}
-                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors hover:bg-primary/10 ${isSelected ? "bg-primary/10 font-bold" : ""
-                      }`}
-                  >
-                    <span className="truncate">{displayText}</span>
-                    <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[80px]">
-                      {subText}
-                    </span>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="px-3 py-3 text-xs text-muted-foreground text-center">
-                No matching village found
-              </div>
-            )}
-          </div>
-
-          {/* Custom option — always shown at bottom */}
-          <div className="border-t border-border/60">
-            {!isCustom ? (
-              <button
-                type="button"
-                onClick={() => setIsCustom(true)}
-                className="w-full text-left px-3 py-2 text-xs text-amber-600 dark:text-amber-400 font-semibold hover:bg-amber-500/10 flex items-center gap-1.5 transition-colors"
-              >
-                <Edit className="w-3 h-3" />
-                Custom Village (type your own)
-              </button>
-            ) : (
-              <div className="p-1.5 flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCustomConfirm()}
-                  placeholder={lang === "en" ? "Type custom village..." : "कस्टम गाँव लिखें..."}
-                  className="flex-1 h-7 px-2 text-xs border border-input rounded-md outline-none focus:ring-1 focus:ring-primary/40 bg-background"
-                  autoFocus
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleCustomConfirm}
-                  disabled={!search.trim()}
-                  className="h-7 px-2 text-xs rounded-md"
-                >
-                  OK
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+import { VillageAutocomplete } from "./VillageAutocomplete";
+import { TransliterationInput } from "./TransliterationInput";
 
 const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   onSuccess,
@@ -442,29 +220,6 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     []
   );
 
-  const handleNameBlur = async (index: number, source: "en" | "hi", text: string) => {
-    if (!text.trim()) return;
-    const sl = source === "en" ? "en" : "hi";
-    const tl = source === "en" ? "hi" : "en";
-    const targetField = source === "en" ? "customerNameHi" : "customerNameEn";
-
-    try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text.trim())}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const result = data[0]?.[0]?.[0];
-      if (result) {
-        setRecords((prev) => {
-          const updated = [...prev];
-          updated[index] = { ...updated[index], [targetField]: result };
-          return updated;
-        });
-      }
-    } catch (error) {
-      console.error("Transliteration error:", error);
-    }
-  };
-
   // Opens the delete confirmation dialog
   const handleAttemptDelete = (index: number) => {
     setDeleteRowIdx(index);
@@ -547,6 +302,123 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
     setOcrMeta(null);
     setEditingCardIdx(null);
   };
+
+  const renderEditCard = (idx: number, row: any) => (
+    <div
+      key={idx}
+      className="bg-card border-2 border-primary/60 rounded-2xl p-3.5 shadow-md space-y-3 relative ring-4 ring-primary/10"
+    >
+      <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-muted-foreground"># S.No</span>
+          <Input
+            type="number"
+            value={row.serialNo}
+            onWheel={(e) => e.currentTarget.blur()}
+            onChange={(e) => handleRowChange(idx, "serialNo", e.target.value)}
+            className="h-8 w-16 text-center font-bold font-mono text-xs rounded-lg bg-background"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH"
+              ? "bg-green-500/10 text-green-600 border-green-500/30"
+              : row.confidence === "MEDIUM"
+                ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+                : "bg-red-500/10 text-red-600 border-red-500/30"
+              }`}
+          >
+            {row.confidence || "HIGH"}
+          </Badge>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleAttemptDelete(idx)}
+            className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
+            title="Remove row"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <TransliterationInput
+          labelHi="Customer Name (Hindi) - नाम"
+          labelEn="Customer Name (English)"
+          valueHi={row.customerNameHi}
+          valueEn={row.customerNameEn}
+          onChange={(hi, en) => {
+            handleRowChange(idx, "customerNameHi", hi);
+            handleRowChange(idx, "customerNameEn", en);
+          }}
+        />
+
+        <div className="flex flex-col gap-2 bg-muted/20 p-2.5 rounded-xl border border-border/50">
+          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi flex items-center justify-between">
+            <span>Village - गाँव</span>
+          </Label>
+          <div className="flex flex-col gap-2">
+            <VillageAutocomplete
+              value={row.villageHi}
+              lang="hi"
+              onChange={(en, hi) => handleVillageChange(idx, en, hi)}
+              className="h-9 text-xs font-hindi rounded-lg bg-background px-3 shadow-sm"
+              placeholder="Hindi Village (गाँव)"
+            />
+            <VillageAutocomplete
+              value={row.villageEn}
+              lang="en"
+              onChange={(en, hi) => handleVillageChange(idx, en, hi)}
+              className="h-9 text-xs rounded-lg bg-background px-3 shadow-sm text-muted-foreground"
+              placeholder="English Village"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Weight (Kg)
+          </Label>
+          <div className="relative mt-1">
+            <Input
+              type="number"
+              step="0.1"
+              value={row.weight}
+              onWheel={(e) => e.currentTarget.blur()}
+              onChange={(e) => handleRowChange(idx, "weight", e.target.value)}
+              className="h-10 text-right font-bold text-sm pr-10 rounded-lg bg-background shadow-sm"
+            />
+            <span className="absolute right-3 top-2.5 text-xs font-bold text-muted-foreground">
+              KG
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-2 pt-3 mt-1 border-t border-border/60">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setEditingCardIdx(null)}
+          className="h-9 px-4 text-xs font-semibold rounded-xl"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setEditingCardIdx(null)}
+          className="bg-green-600 hover:bg-green-700 text-white font-bold h-9 px-5 rounded-xl shadow gap-1.5 text-xs"
+        >
+          <CheckCircle2 className="w-4 h-4" /> Done
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-6">
@@ -790,87 +662,30 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {records.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-muted/30">
-                      <td className="p-1">
-                        <Input
-                          type="number"
-                          value={row.serialNo}
-                          onWheel={(e) => e.currentTarget.blur()}
-                          onChange={(e) => handleRowChange(idx, "serialNo", e.target.value)}
-                          className="h-8 w-12 text-center font-bold font-mono px-1 text-xs rounded-lg"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <Input
-                          value={row.customerNameEn}
-                          onChange={(e) => handleRowChange(idx, "customerNameEn", e.target.value)}
-                          onBlur={(e) => handleNameBlur(idx, "en", e.target.value)}
-                          className="h-8 text-xs px-2 rounded-lg"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <Input
-                          value={row.customerNameHi}
-                          onChange={(e) => handleRowChange(idx, "customerNameHi", e.target.value)}
-                          onBlur={(e) => handleNameBlur(idx, "hi", e.target.value)}
-                          className="h-8 text-xs px-2 font-hindi rounded-lg"
-                        />
-                      </td>
-                      <td className="p-1">
-                        <div className="flex flex-col gap-1">
-                          <VillageAutocomplete
-                            value={row.villageEn}
-                            lang="en"
-                            onChange={(en, hi) => handleVillageChange(idx, en, hi)}
-                            className="h-7 text-xs px-2 rounded-lg"
-                            placeholder="English Village"
-                          />
-                          <VillageAutocomplete
-                            value={row.villageHi}
-                            lang="hi"
-                            onChange={(en, hi) => handleVillageChange(idx, en, hi)}
-                            className="h-7 text-xs px-2 font-hindi text-muted-foreground rounded-lg"
-                            placeholder="Hindi Village"
-                          />
-                        </div>
-                      </td>
-                      <td className="p-1">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={row.weight}
-                          onWheel={(e) => e.currentTarget.blur()}
-                          onChange={(e) => handleRowChange(idx, "weight", e.target.value)}
-                          className="h-8 w-20 text-right font-bold text-xs px-2 rounded-lg"
-                        />
-                      </td>
-                      <td className="p-1 text-center">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH"
-                            ? "bg-green-500/10 text-green-600 border-green-500/30"
-                            : row.confidence === "MEDIUM"
-                              ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
-                              : "bg-red-500/10 text-red-600 border-red-500/30"
-                            }`}
-                        >
-                          {row.confidence || "HIGH"}
-                        </Badge>
-                      </td>
-                      <td className="p-1 text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleAttemptDelete(idx)}
-                          className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
-                          title="Remove row"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {records.map((row, idx) => {
+                    const isEditing = editingCardIdx === idx;
+                    return (
+                      <tr key={idx} className={`hover:bg-muted/30 ${isEditing ? 'bg-primary/5 shadow-inner' : ''}`}>
+                        <td className="p-2 font-mono font-bold text-center text-sm">{row.serialNo}</td>
+                        <td className="p-2 font-medium text-[13px]">{row.customerNameEn || "-"}</td>
+                        <td className="p-2 font-hindi font-medium text-[14px]">{row.customerNameHi || "-"}</td>
+                        <td className="p-2 text-xs">
+                          <div className="font-semibold text-[13px]">{row.villageEn || "-"}</div>
+                          <div className="font-hindi text-muted-foreground/80 mt-0.5 text-[12px]">{row.villageHi || "-"}</div>
+                        </td>
+                        <td className="p-2 text-right font-bold text-[14px] bg-muted/10">{row.weight} <span className="text-[10px] font-normal text-muted-foreground">kg</span></td>
+                        <td className="p-2 text-center">
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH" ? "bg-green-500/10 text-green-600 border-green-500/30" : row.confidence === "MEDIUM" ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30" : "bg-red-500/10 text-red-600 border-red-500/30"}`}>{row.confidence || "HIGH"}</Badge>
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingCardIdx(idx)} className="h-7 w-7 text-primary hover:text-primary hover:bg-primary/10 rounded-lg"><Edit className="w-3.5 h-3.5" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleAttemptDelete(idx)} className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -883,111 +698,42 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                 </div>
               ) : (
                 records.map((row, idx) => {
-                  const isEditing = editingCardIdx === idx;
                   const totalPrice = Math.round((Number(row.weight) || 0) * 3);
 
-                  if (!isEditing) {
-                    return (
-                      <div
-                        key={idx}
-                        className="relative flex rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm active:scale-[0.99] transition-all"
-                      >
-                        {/* Left panel: serial circle + commodity label at bottom */}
-                        <div className="flex flex-col items-center justify-between gap-0 px-3 py-3 bg-primary/8 border-r border-border/40 shrink-0 min-w-[52px]">
-                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-mono font-black text-xs shadow-sm">
-                            {row.serialNo}
-                          </div>
-                          <span className="text-[9px] font-bold text-primary/70 mt-1 tracking-wide leading-none">
-                            {commodityType === "WHEAT" ? "Wheat" : "Sarso"}
-                          </span>
-                        </div>
-
-                        {/* Main content */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between py-2.5 px-3 gap-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="font-bold text-[14px] text-foreground leading-snug truncate">
-                                {row.customerNameHi || "अज्ञात"}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground font-hindi truncate leading-relaxed">
-                                {row.customerNameEn || "Unnamed"}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground/75 mt-0.5 truncate">
-                                {row.villageHi || "अज्ञात"}
-                                {row.villageEn ? <span className="font-hindi text-muted-foreground/60"> / {row.villageEn}</span> : null}
-                              </p>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] px-1.5 py-0 font-bold shrink-0 ${row.confidence === "HIGH"
-                                ? "bg-green-500/10 text-green-600 border-green-500/30"
-                                : row.confidence === "MEDIUM"
-                                  ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
-                                  : "bg-red-500/10 text-red-600 border-red-500/30"
-                                }`}
-                            >
-                              {row.confidence || "HIGH"}
-                            </Badge>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/40">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="font-extrabold text-[15px] tabular-nums text-foreground leading-none">
-                                {row.weight}
-                                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">kg</span>
-                              </span>
-                              <span className="text-[11px] font-semibold text-primary tabular-nums leading-none">
-                                · ₹{totalPrice}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingCardIdx(idx)}
-                                className="h-7 px-2.5 text-xs font-semibold rounded-lg gap-1 border-primary/30 text-primary hover:bg-primary/10"
-                              >
-                                <Edit className="w-3 h-3" /> Edit
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleAttemptDelete(idx)}
-                                className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg shrink-0"
-                                title="Remove row"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // ── Mobile Edit Card ──────────────────────────────────
                   return (
                     <div
                       key={idx}
-                      className="bg-card border-2 border-primary/60 rounded-2xl p-3.5 shadow-md space-y-3 relative ring-4 ring-primary/10"
+                      className="relative flex rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm active:scale-[0.99] transition-all cursor-pointer hover:border-primary/30"
+                      onClick={() => setEditingCardIdx(idx)}
                     >
-                      <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-muted-foreground"># S.No</span>
-                          <Input
-                            type="number"
-                            value={row.serialNo}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            onChange={(e) => handleRowChange(idx, "serialNo", e.target.value)}
-                            className="h-8 w-16 text-center font-bold font-mono text-xs rounded-lg bg-background"
-                          />
+                      {/* Left panel: serial circle + commodity label at bottom */}
+                      <div className="flex flex-col items-center justify-between gap-0 px-3 py-3 bg-primary/8 border-r border-border/40 shrink-0 min-w-[52px]">
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-mono font-black text-xs shadow-sm">
+                          {row.serialNo}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold text-primary/70 mt-1 tracking-wide leading-none">
+                          {commodityType === "WHEAT" ? "Wheat" : "Sarso"}
+                        </span>
+                      </div>
+
+                      {/* Main content */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between py-2.5 px-3 gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-bold text-[14px] text-foreground leading-snug truncate">
+                              {row.customerNameHi || "अज्ञात"}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground font-hindi truncate leading-relaxed">
+                              {row.customerNameEn || "Unnamed"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/75 mt-0.5 truncate">
+                              {row.villageHi || "अज्ञात"}
+                              {row.villageEn ? <span className="font-hindi text-muted-foreground/60"> / {row.villageEn}</span> : null}
+                            </p>
+                          </div>
                           <Badge
                             variant="outline"
-                            className={`text-[10px] px-1.5 py-0 font-bold ${row.confidence === "HIGH"
+                            className={`text-[9px] px-1.5 py-0 font-bold shrink-0 ${row.confidence === "HIGH"
                               ? "bg-green-500/10 text-green-600 border-green-500/30"
                               : row.confidence === "MEDIUM"
                                 ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
@@ -996,103 +742,40 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                           >
                             {row.confidence || "HIGH"}
                           </Badge>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleAttemptDelete(idx)}
-                            className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg"
-                            title="Remove row"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-1 gap-2.5">
-                        <div>
-                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Customer Name (English)
-                          </Label>
-                          <Input
-                            value={row.customerNameEn}
-                            onChange={(e) => handleRowChange(idx, "customerNameEn", e.target.value)}
-                            onBlur={(e) => handleNameBlur(idx, "en", e.target.value)}
-                            placeholder="English Name"
-                            className="h-9 text-xs rounded-lg mt-1 bg-background"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi">
-                            Customer Name (Hindi) - नाम
-                          </Label>
-                          <Input
-                            value={row.customerNameHi}
-                            onChange={(e) => handleRowChange(idx, "customerNameHi", e.target.value)}
-                            onBlur={(e) => handleNameBlur(idx, "hi", e.target.value)}
-                            placeholder="Hindi Name"
-                            className="h-9 text-xs font-hindi rounded-lg mt-1 bg-background"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Village (En)
-                            </Label>
-                            <div className="mt-1">
-                              <VillageAutocomplete
-                                value={row.villageEn}
-                                lang="en"
-                                onChange={(en, hi) => handleVillageChange(idx, en, hi)}
-                                className="h-9 text-xs rounded-lg bg-background px-2"
-                                placeholder="English Village"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-hindi">
-                              Village (Hi) - गाँव
-                            </Label>
-                            <div className="mt-1">
-                              <VillageAutocomplete
-                                value={row.villageHi}
-                                lang="hi"
-                                onChange={(en, hi) => handleVillageChange(idx, en, hi)}
-                                className="h-9 text-xs font-hindi rounded-lg bg-background text-muted-foreground px-2"
-                                placeholder="Hindi Village"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Weight (Kg)
-                          </Label>
-                          <div className="relative mt-1">
-                            <Input
-                              type="number"
-                              step="0.1"
-                              value={row.weight}
-                              onWheel={(e) => e.currentTarget.blur()}
-                              onChange={(e) => handleRowChange(idx, "weight", e.target.value)}
-                              className="h-9 text-right font-bold text-xs pr-10 rounded-lg bg-background"
-                            />
-                            <span className="absolute right-3 top-2 text-[10px] font-bold text-muted-foreground">
-                              KG
+                        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/40">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-extrabold text-[15px] tabular-nums text-foreground leading-none">
+                              {row.weight}
+                              <span className="text-[10px] font-normal text-muted-foreground ml-0.5">kg</span>
+                            </span>
+                            <span className="text-[11px] font-semibold text-primary tabular-nums leading-none">
+                              · ₹{totalPrice}
                             </span>
                           </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); setEditingCardIdx(idx); }}
+                              className="h-7 px-2.5 text-xs font-semibold rounded-lg gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                            >
+                              <Edit className="w-3 h-3" /> Edit
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleAttemptDelete(idx); }}
+                              className="h-7 w-7 text-muted-foreground hover:text-red-500 rounded-lg shrink-0"
+                              title="Remove row"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => setEditingCardIdx(null)}
-                          className="bg-green-600 hover:bg-green-700 text-white font-bold h-8 px-4 rounded-xl shadow gap-1 text-xs"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Done Editing
-                        </Button>
                       </div>
                     </div>
                   );
@@ -1134,6 +817,16 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
           </div>
         </div>
       )}
+
+      {/* PC Edit Dialog */}
+      <Dialog open={editingCardIdx !== null} onOpenChange={(open) => !open && setEditingCardIdx(null)}>
+        <DialogContent className="sm:max-w-[400px] p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Edit Record</DialogTitle>
+          </DialogHeader>
+          {editingCardIdx !== null && renderEditCard(editingCardIdx, records[editingCardIdx])}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>

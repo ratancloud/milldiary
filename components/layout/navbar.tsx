@@ -51,6 +51,7 @@ export default function Navbar() {
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "MillData", href: "/mill-data", icon: Database },
       { name: "Ledger", href: "/grinding-ledger", icon: NotebookTextIcon },
+      { name: "New Ledger", href: "/grinding-ledger/new", icon: PlusSquare },
       { name: "InsertData", href: "/mill-data/create", icon: PlusSquare },
       { name: "About", href: "/about", icon: Users },
       { name: "Contact Us", href: "/contact-us", icon: MessageCircleDashed },

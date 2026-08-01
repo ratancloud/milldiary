@@ -23,7 +23,7 @@ const GrindingLedgerCreateModal: React.FC<GrindingLedgerCreateModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[650px] max-h-[92vh] overflow-y-auto p-2 sm:p-4 border-none bg-transparent shadow-none">
+      <DialogContent>
         <GrindingLedgerManualForm
           editItem={editItem}
           onSuccess={() => {

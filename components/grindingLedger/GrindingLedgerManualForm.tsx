@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { Loader2, PlusSquare, Edit, CalendarIcon } from "lucide-react";
+import { Loader2, CalendarIcon, Languages } from "lucide-react";
 import { GrindingLedger } from "@/types/grinding-ledger";
 import {
   createGrindingLedgerFormSchema,
@@ -27,6 +27,10 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { formateIndDate } from "@/lib/helper";
+import { translateText } from "@/lib/translate";
+import { VillageAutocomplete } from "./VillageAutocomplete";
+import { TransliterationInput } from "./TransliterationInput";
+
 
 interface GrindingLedgerManualFormProps {
   onSuccess: () => void;
@@ -66,6 +70,10 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
   const commodityType = watch("commodityType");
   const watchedDate = watch("date");
 
+  // Translation States
+  const [isTranslatingVillageEn, setIsTranslatingVillageEn] = useState(false);
+  const [isTranslatingVillageHi, setIsTranslatingVillageHi] = useState(false);
+
   const displayDate = watchedDate
     ? formateIndDate(new Date(`${watchedDate}T00:00:00`))
     : formateIndDate(new Date());
@@ -96,6 +104,38 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
       });
     }
   }, [editItem, reset]);
+
+  const handleTranslate = async (
+    value: string,
+    targetField: "customerNameEn" | "customerNameHi" | "villageEn" | "villageHi",
+    from: "en" | "hi",
+    to: "en" | "hi",
+    setLoading: (val: boolean) => void
+  ) => {
+    if (!value.trim()) return;
+    setLoading(true);
+    try {
+      const translated = await translateText(value, from, to);
+      setValue(targetField, translated, { shouldValidate: true, shouldDirty: true });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVillageChange = (en: string | null, hi: string | null) => {
+    if (en !== null && hi !== null) {
+      setValue("villageEn", en, { shouldValidate: true, shouldDirty: true });
+      setValue("villageHi", hi, { shouldValidate: true, shouldDirty: true });
+    } else if (en !== null) {
+      setValue("villageEn", en, { shouldValidate: true, shouldDirty: true });
+      handleTranslate(en, "villageHi", "en", "hi", setIsTranslatingVillageHi);
+    } else if (hi !== null) {
+      setValue("villageHi", hi, { shouldValidate: true, shouldDirty: true });
+      handleTranslate(hi, "villageEn", "hi", "en", setIsTranslatingVillageEn);
+    }
+  };
 
   const onSubmit = async (data: CreateGrindingLedgerFormInput) => {
     try {
@@ -132,44 +172,31 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-6">
-      <div className="flex items-center justify-between border-b border-border/60 pb-4">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-            {isEditing ? (
-              <>
-                <Edit className="h-5 w-5 text-blue-500" /> Edit Grinding Slip #{editItem?.serialNo}
-              </>
-            ) : (
-              <>
-                <PlusSquare className="h-5 w-5 text-primary" /> Add New Grinding Slip
-              </>
-            )}
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Enter customer names, village location, and milling weight in Kg.
-          </p>
-        </div>
+    <div className={`${!isEditing ? "rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-6" : ""}`}>
+      <div className="flex flex-col space-y-1.5 text-center sm:text-left border-b border-border/60 pb-4">
+        <h2 className="text-lg font-semibold leading-none tracking-tight">
+          {isEditing ? `Edit Grinding Slip #${editItem?.serialNo}` : "New Grinding Slip"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Fill in the details accurately. Fields will auto-translate between English and Hindi.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Date */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              Date
-            </Label>
+            <Label className="text-xs font-semibold text-muted-foreground">Date</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center justify-between w-full h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="flex items-center justify-between w-full h-9 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
                 >
                   <span>{displayDate}</span>
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-auto overflow-hidden p-0">
+              <PopoverContent align="start" className="w-auto overflow-hidden p-0 rounded-md border-border shadow-md">
                 <Calendar
                   mode="single"
                   selected={watchedDate ? new Date(`${watchedDate}T00:00:00`) : undefined}
@@ -184,162 +211,120 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
                 />
               </PopoverContent>
             </Popover>
-            {errors.date && (
-              <p className="text-xs text-red-500">{errors.date.message}</p>
-            )}
+            {errors.date && <p className="text-xs text-destructive font-medium">{errors.date.message}</p>}
           </div>
 
-          {/* Serial No */}
           <div className="space-y-1.5">
-            <Label htmlFor="serialNo" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              Serial No (S.No)
-            </Label>
+            <Label htmlFor="serialNo" className="text-xs font-semibold text-muted-foreground">Serial No</Label>
             <Input
               type="number"
               id="serialNo"
               onWheel={(e) => e.currentTarget.blur()}
               {...register("serialNo", { valueAsNumber: true })}
               placeholder="101"
-              className="w-full font-mono font-bold h-11 rounded-xl"
+              className="w-full font-medium h-9 rounded-md shadow-sm"
             />
-            {errors.serialNo && (
-              <p className="text-xs text-red-500">{errors.serialNo.message}</p>
+            {errors.serialNo && <p className="text-xs text-destructive font-medium">{errors.serialNo.message}</p>}
+          </div>
+
+          <div className="sm:col-span-2">
+            <TransliterationInput
+              labelHi="Customer Name (Hi)"
+              labelEn="Customer Name (En)"
+              valueHi={watch("customerNameHi")}
+              valueEn={watch("customerNameEn")}
+              onChange={(hi, en) => {
+                setValue("customerNameHi", hi, { shouldValidate: true, shouldDirty: true });
+                setValue("customerNameEn", en, { shouldValidate: true, shouldDirty: true });
+              }}
+              className="sm:flex-row"
+            />
+            {(errors.customerNameEn || errors.customerNameHi) && (
+              <p className="text-xs text-destructive font-medium mt-1">
+                {errors.customerNameEn?.message || errors.customerNameHi?.message}
+              </p>
             )}
           </div>
 
-          {/* Commodity Type */}
           <div className="space-y-1.5">
-            <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              Commodity Type
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              Village (En)
+              {isTranslatingVillageEn && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
             </Label>
+            <VillageAutocomplete
+              value={watch("villageEn")}
+              lang="en"
+              onChange={handleVillageChange}
+              className="h-9 font-medium"
+              placeholder="e.g. Agiaon Bazar"
+            />
+            {errors.villageEn && <p className="text-xs text-destructive font-medium">{errors.villageEn.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2 font-hindi">
+              Village (Hi)
+              {isTranslatingVillageHi && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+            </Label>
+            <VillageAutocomplete
+              value={watch("villageHi")}
+              lang="hi"
+              onChange={handleVillageChange}
+              className="h-9 font-medium font-hindi"
+              placeholder="e.g. अगिआँव बाजार"
+            />
+            {errors.villageHi && <p className="text-xs text-destructive font-medium">{errors.villageHi.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground">Commodity</Label>
             <Select
               value={commodityType}
-              onValueChange={(val: "WHEAT" | "MUSTARD") =>
-                setValue("commodityType", val)
-              }
+              onValueChange={(val: "WHEAT" | "MUSTARD") => setValue("commodityType", val)}
             >
-              <SelectTrigger className="w-full font-semibold h-11 rounded-xl">
+              <SelectTrigger className="w-full font-medium h-9 rounded-md shadow-sm bg-background">
                 <SelectValue placeholder="Select Commodity" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="WHEAT" className="font-medium">Wheat (गेहूं)</SelectItem>
-                <SelectItem value="MUSTARD" className="font-medium">Mustard (सरसों)</SelectItem>
+              <SelectContent className="rounded-md">
+                <SelectItem value="WHEAT">Wheat (गेहूं)</SelectItem>
+                <SelectItem value="MUSTARD">Mustard (सरसों)</SelectItem>
               </SelectContent>
             </Select>
-            {errors.commodityType && (
-              <p className="text-xs text-red-500">{errors.commodityType.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t border-border/60 pt-4">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-            Customer Details
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="customerNameEn" className="text-xs font-semibold">
-                Name (English)
-              </Label>
-              <Input
-                id="customerNameEn"
-                {...register("customerNameEn")}
-                placeholder="e.g. Ram Kumar"
-                className="h-11 rounded-xl font-medium"
-              />
-              {errors.customerNameEn && (
-                <p className="text-xs text-red-500">{errors.customerNameEn.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="customerNameHi" className="text-xs font-semibold font-hindi">
-                Name (Hindi) - नाम
-              </Label>
-              <Input
-                id="customerNameHi"
-                {...register("customerNameHi")}
-                placeholder="e.g. राम कुमार"
-                className="h-11 rounded-xl font-medium font-hindi"
-              />
-              {errors.customerNameHi && (
-                <p className="text-xs text-red-500">{errors.customerNameHi.message}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="villageEn" className="text-xs font-semibold">
-              Village (English)
-            </Label>
-            <Input
-              id="villageEn"
-              {...register("villageEn")}
-              placeholder="e.g. Agiaon Bazar"
-              className="h-11 rounded-xl font-medium"
-            />
-            {errors.villageEn && (
-              <p className="text-xs text-red-500">{errors.villageEn.message}</p>
-            )}
+            {errors.commodityType && <p className="text-xs text-destructive font-medium">{errors.commodityType.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="villageHi" className="text-xs font-semibold font-hindi">
-              Village (Hindi) - गाँव
-            </Label>
-            <Input
-              id="villageHi"
-              {...register("villageHi")}
-              placeholder="e.g. अगिआँव बाजार"
-              className="h-11 rounded-xl font-medium font-hindi"
-            />
-            {errors.villageHi && (
-              <p className="text-xs text-red-500">{errors.villageHi.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t border-border/60 pt-4">
-          <div className="space-y-1.5 w-full sm:max-w-[240px]">
-            <Label htmlFor="weight" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-              Milled Weight (Kg)
-            </Label>
+            <Label htmlFor="weight" className="text-xs font-semibold text-muted-foreground">Milled Weight (Kg)</Label>
             <div className="relative">
               <Input
                 type="number"
-                step="0.1"
+                step="0.01"
                 id="weight"
                 onWheel={(e) => e.currentTarget.blur()}
                 {...register("weight", { valueAsNumber: true })}
-                placeholder="45.5"
-                className="w-full font-bold text-xl pr-12 h-12 rounded-xl"
+                placeholder="45.50"
+                className="w-full font-semibold pr-10 h-9 rounded-md shadow-sm transition-colors focus:border-primary"
               />
-              <span className="absolute right-3.5 top-3 text-xs font-bold text-muted-foreground">
-                KG
-              </span>
+              <span className="absolute right-3 top-2.5 text-xs font-semibold text-muted-foreground">KG</span>
             </div>
-            {errors.weight && (
-              <p className="text-xs text-red-500">{errors.weight.message}</p>
-            )}
+            {errors.weight && <p className="text-xs text-destructive font-medium">{errors.weight.message}</p>}
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="h-11 px-6 rounded-xl font-semibold"
+            className="h-9 px-4 rounded-md font-medium mt-2 sm:mt-0"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 px-8 rounded-xl shadow-md shadow-primary/20 gap-2"
+            className="h-9 px-6 rounded-md font-medium shadow-sm gap-2"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isEditing ? "Update Slip" : "Save Record"}

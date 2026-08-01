@@ -12,7 +12,7 @@ export const formatRs = (value?: number) =>
 export const formatKg = (value?: number) =>
   new Intl.NumberFormat("en-IN", {
     minimumFractionDigits: value && value % 1 !== 0 ? 1 : 0,
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 2,
   }).format(value ?? 0);
 
 
@@ -29,7 +29,7 @@ export const formatKgRs = (kg?: number, rs?: number) => {
 
 // formate Indian date
 export const formateIndDate = (date: Date) => {
-   return new Date(date).toLocaleDateString("en-IN", {
+  return new Date(date).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
