@@ -10,6 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.6.25",
     "@google/genai": "^2.13.0",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-neon": "^7.2.0",
