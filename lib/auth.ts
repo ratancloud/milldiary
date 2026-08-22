@@ -12,5 +12,5 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [expo()],
-  trustedOrigins: ["millledger://", "milldiaryapp://", "exp://*"]
+  trustedOrigins: ["milldiaryapp://", "exp://*"]
 });
