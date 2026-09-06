@@ -3,36 +3,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type StatCardVariant = "green" | "red" | "blue" | "purple" | "amber";
+export type StatCardVariant =
+  | "default"
+  | "green"
+  | "red"
+  | "blue"
+  | "purple"
+  | "amber"
+  | "muted";
 
 const CARD_VARIANTS: Record<
   StatCardVariant,
-  { headerBg: string; title: string; value: string }
+  { headerBg: string; iconBg: string; title: string; value: string }
 > = {
+  default: {
+    headerBg: "bg-muted/35 dark:bg-muted/15 border-border/60",
+    iconBg: "bg-background dark:bg-muted/60 text-muted-foreground border-border/60 shadow-2xs",
+    title: "text-foreground",
+    value: "text-foreground",
+  },
   green: {
-    headerBg: "bg-green-50/40 dark:bg-green-900/10",
-    title: "text-green-600 dark:text-green-400",
-    value: "text-green-700 dark:text-green-400",
+    headerBg: "bg-emerald-500/[0.06] dark:bg-emerald-500/10 border-emerald-500/20",
+    iconBg: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 shadow-2xs",
+    title: "text-foreground dark:text-emerald-100",
+    value: "text-emerald-700 dark:text-emerald-400",
   },
   red: {
-    headerBg: "bg-red-50/40 dark:bg-red-900/10",
-    title: "text-red-600 dark:text-red-400",
-    value: "text-red-700 dark:text-red-400",
+    headerBg: "bg-rose-500/[0.06] dark:bg-rose-500/10 border-rose-500/20",
+    iconBg: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/25 shadow-2xs",
+    title: "text-foreground dark:text-rose-100",
+    value: "text-rose-700 dark:text-rose-400",
   },
   blue: {
-    headerBg: "bg-blue-50/40 dark:bg-blue-900/10",
-    title: "text-blue-700 dark:text-blue-400",
-    value: "text-blue-700 dark:text-blue-400",
+    headerBg: "bg-sky-500/[0.06] dark:bg-sky-500/10 border-sky-500/20",
+    iconBg: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/25 shadow-2xs",
+    title: "text-foreground dark:text-sky-100",
+    value: "text-sky-700 dark:text-sky-400",
   },
   purple: {
-    headerBg: "bg-purple-50/40 dark:bg-purple-900/10",
-    title: "text-purple-700 dark:text-purple-400",
-    value: "text-purple-700 dark:text-purple-400",
+    headerBg: "bg-violet-500/[0.06] dark:bg-violet-500/10 border-violet-500/20",
+    iconBg: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/25 shadow-2xs",
+    title: "text-foreground dark:text-violet-100",
+    value: "text-violet-700 dark:text-violet-400",
   },
   amber: {
-    headerBg: "bg-amber-50/40 dark:bg-amber-900/10",
-    title: "text-amber-700 dark:text-amber-400",
+    headerBg: "bg-amber-500/[0.06] dark:bg-amber-500/10 border-amber-500/20",
+    iconBg: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25 shadow-2xs",
+    title: "text-foreground dark:text-amber-100",
     value: "text-amber-700 dark:text-amber-400",
+  },
+  muted: {
+    headerBg: "bg-muted/35 dark:bg-muted/15 border-border/60",
+    iconBg: "bg-background dark:bg-muted/60 text-muted-foreground border-border/60 shadow-2xs",
+    title: "text-foreground",
+    value: "text-foreground",
   },
 };
 
@@ -55,60 +79,79 @@ const StatCard = ({
   icon: Icon,
   label,
   headerValue,
-  variant = "green",
+  variant = "default",
   isLoading = false,
   isSensitive = false,
   headerClassName,
   titleClassName,
   headerValueClassName,
-  gridClassName = "grid grid-cols-2 gap-3",
+  gridClassName = "grid grid-cols-2 gap-2.5 sm:gap-3",
   skeletonCount = 4,
   children,
 }: StatCardProps) => {
-  const styles = CARD_VARIANTS[variant] ?? CARD_VARIANTS.green;
-  const displayHeader =
-    typeof headerValue === "number" ? headerValue.toLocaleString("en-IN") : headerValue;
+  const styles = CARD_VARIANTS[variant] ?? CARD_VARIANTS.default;
+  const hasCurrencyPrefix =
+    typeof headerValue === "string" &&
+    (headerValue.startsWith("₹") || headerValue.startsWith("Rs"));
+  const rawDisplay =
+    typeof headerValue === "number"
+      ? headerValue.toLocaleString("en-IN")
+      : hasCurrencyPrefix
+        ? headerValue.replace(/^(₹|Rs\.?)\s*/, "")
+        : headerValue;
+  const displayHeader = rawDisplay;
 
   return (
-    <div className="rounded-xl border bg-card shadow-sm overflow-hidden transition-all duration-200 hover:scale-[1.01] flex flex-col justify-between">
+    <div className="rounded-xl border border-border/80 dark:border-border/60 bg-card text-card-foreground shadow-xs overflow-hidden transition-all duration-200 hover:border-border hover:shadow-sm flex flex-col justify-between">
       {/* Header */}
       <div
         className={cn(
-          "p-4 border-b flex items-center justify-between min-h-[65px] gap-3",
+          "px-4 py-3 sm:px-5 sm:py-3.5 border-b flex items-center justify-between min-h-[56px] gap-3",
           headerClassName || styles.headerBg
         )}
       >
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className={cn(
+              "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border",
+              styles.iconBg
+            )}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
           <h3
             className={cn(
-              "font-bold text-base flex items-center gap-2",
+              "font-semibold text-sm sm:text-base tracking-tight truncate",
               titleClassName || styles.title
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" /> {label}
+            {label}
           </h3>
         </div>
 
         <div
           className={cn(
-            "text-xl sm:text-2xl font-bold tabular-nums flex items-baseline gap-1.5 shrink-0",
+            "text-lg sm:text-xl font-bold font-mono tabular-nums flex items-baseline gap-1 shrink-0 tracking-tight",
             headerValueClassName || styles.value
           )}
         >
           {isLoading ? (
-            <Skeleton className="h-7 w-28 opacity-50" />
+            <Skeleton className="h-6 w-24 rounded-md" />
           ) : (
-            `₹${isSensitive ? "••••••" : displayHeader}`
+            <>
+              <span className="text-xs sm:text-sm font-sans font-medium opacity-65">₹</span>
+              <span>{isSensitive ? "••••••" : displayHeader}</span>
+            </>
           )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3.5 sm:p-4">
         {isLoading ? (
           <div className={gridClassName}>
             {Array.from({ length: skeletonCount }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              <Skeleton key={i} className="h-[64px] w-full rounded-lg" />
             ))}
           </div>
         ) : (

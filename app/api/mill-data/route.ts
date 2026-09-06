@@ -83,16 +83,16 @@ export async function GET(req: NextRequest) {
 
     const wheatRate = 3;
     const sarsoRate = 5;
-    const wheatMoney = Number((wheatWeight * wheatRate).toFixed(2));
-    const sarsoMoney = Number((sarsoWeight * sarsoRate).toFixed(2));
-    const totalWeight = Number((wheatWeight + sarsoWeight).toFixed(2));
-    const totalMoney = Number((wheatMoney + sarsoMoney).toFixed(2));
+    const wheatMoney = Number((wheatWeight * wheatRate).toFixed(0));
+    const sarsoMoney = Number((sarsoWeight * sarsoRate).toFixed(0));
+    const totalWeight = Number((wheatWeight + sarsoWeight).toFixed(0));
+    const totalMoney = Number((wheatMoney + sarsoMoney).toFixed(0));
     const totalRecords = wheatRecords + sarsoRecords;
 
     const grindingStats = {
       totalWeight,
-      wheatWeight: Number(wheatWeight.toFixed(2)),
-      sarsoWeight: Number(sarsoWeight.toFixed(2)),
+      wheatWeight: Number(wheatWeight.toFixed(0)),
+      sarsoWeight: Number(sarsoWeight.toFixed(0)),
       wheatMoney,
       sarsoMoney,
       totalMoney,
