@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'MillDiary',
     description: 'Mill data management system',
     lang: 'en',
-    start_url: '/',
+    start_url: '/mill-data',
     scope: '/',
     display: 'standalone',
     background_color: '#FFFFFF',
