@@ -1,12 +1,13 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { MillData, MonthlyTotalStat } from "@/types/mill-data";
+import { MillData, GrindingStat, TotalStat } from "@/types/mill-data";
 import toast from "react-hot-toast";
 import { formateIndDate } from "./helper";
 
 interface ExportToExcelParams {
   data: MillData[];
-  totals: MonthlyTotalStat;
+  totals: TotalStat;
+  grindingStats?: GrindingStat;
   year: string;
   month: string;
 }
@@ -14,6 +15,7 @@ interface ExportToExcelParams {
 export const handleExportToExcel = async ({
   data,
   totals,
+  grindingStats,
   year,
   month,
 }: ExportToExcelParams) => {
@@ -126,6 +128,59 @@ export const handleExportToExcel = async ({
       fgColor: { argb: "FFFFFF00" },
     };
   });
+
+  // Optional: Add Grinding Summary Sheet
+  if (grindingStats && (grindingStats.totalRecords > 0 || grindingStats.totalWeight > 0)) {
+    const grindingSheet = workbook.addWorksheet("Grinding Summary");
+    grindingSheet.columns = [
+      { header: "Commodity", key: "commodity", width: 28 },
+      { header: "Weight (Kg)", key: "weight", width: 18 },
+      { header: "Amount (Rs)", key: "amount", width: 20 },
+      { header: "Total Slips", key: "slips", width: 16 },
+    ];
+
+    grindingSheet.addRow({
+      commodity: "Wheat",
+      weight: grindingStats.wheatWeight,
+      amount: grindingStats.wheatMoney,
+      slips: grindingStats.wheatRecords,
+    });
+
+    grindingSheet.addRow({
+      commodity: "Sarso",
+      weight: grindingStats.sarsoWeight,
+      amount: grindingStats.sarsoMoney,
+      slips: grindingStats.sarsoRecords,
+    });
+
+    const totalGRow = grindingSheet.addRow({
+      commodity: "TOTAL GRINDING",
+      weight: grindingStats.totalWeight,
+      rate: "-",
+      amount: grindingStats.totalMoney,
+      slips: grindingStats.totalRecords,
+    });
+
+    totalGRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF000000" },
+      };
+      cell.alignment = { horizontal: "center" };
+    });
+
+    const gHeader = grindingSheet.getRow(1);
+    gHeader.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF000000" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFF00" },
+      };
+    });
+  }
 
   // Save File
   const buffer = await workbook.xlsx.writeBuffer();

@@ -33,17 +33,73 @@ export async function GET(req: NextRequest) {
     const start = new Date(Date.UTC(year, month - 1, 1));
     const end = new Date(Date.UTC(year, month, 1));
 
-    /* ---------- Fetch ---------- */
-    const millData = await prisma.millData.findMany({
-      where: {
-        userId: session.user.id,
-        date: {
-          gte: start,
-          lt: end,
+    /* ---------- Fetch Mill Data & Grinding Ledger Aggregation in Parallel ---------- */
+    const [millData, grindingGroupStats] = await Promise.all([
+      prisma.millData.findMany({
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: start,
+            lt: end,
+          },
         },
-      },
-      orderBy: { date: "asc" },
-    });
+        orderBy: { date: "asc" },
+      }),
+      prisma.grindingLedger.groupBy({
+        by: ["commodityType"],
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: start,
+            lt: end,
+          },
+        },
+        _sum: {
+          weight: true,
+        },
+        _count: {
+          id: true,
+        },
+      }),
+    ]);
+
+    /* ---------- Grinding Stats Calculation (High performance, O(1) in Node.js) ---------- */
+    let wheatWeight = 0;
+    let sarsoWeight = 0;
+    let wheatRecords = 0;
+    let sarsoRecords = 0;
+
+    for (const group of grindingGroupStats) {
+      const weight = Number(group._sum?.weight ?? 0);
+      const count = Number(group._count?.id ?? 0);
+      if (group.commodityType === "WHEAT") {
+        wheatWeight = weight;
+        wheatRecords = count;
+      } else if (group.commodityType === "MUSTARD") {
+        sarsoWeight = weight;
+        sarsoRecords = count;
+      }
+    }
+
+    const wheatRate = 3;
+    const sarsoRate = 5;
+    const wheatMoney = Number((wheatWeight * wheatRate).toFixed(2));
+    const sarsoMoney = Number((sarsoWeight * sarsoRate).toFixed(2));
+    const totalWeight = Number((wheatWeight + sarsoWeight).toFixed(2));
+    const totalMoney = Number((wheatMoney + sarsoMoney).toFixed(2));
+    const totalRecords = wheatRecords + sarsoRecords;
+
+    const grindingStats = {
+      totalWeight,
+      wheatWeight: Number(wheatWeight.toFixed(2)),
+      sarsoWeight: Number(sarsoWeight.toFixed(2)),
+      wheatMoney,
+      sarsoMoney,
+      totalMoney,
+      totalRecords,
+      wheatRecords,
+      sarsoRecords,
+    };
 
     /* ---------- Totals ---------- */
     const totals = calculateTotals(millData);
@@ -51,6 +107,7 @@ export async function GET(req: NextRequest) {
     return apiResponseSuccess({
       items: millData,
       totals,
+      grindingStats,
     });
   } catch (error) {
     console.error("GET /mill-data error:", error);

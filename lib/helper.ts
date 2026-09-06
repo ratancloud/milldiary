@@ -1,4 +1,4 @@
-import { EMPTY_MONTHLY_STAT, MillData, MonthlyTotalStat } from "@/types/mill-data";
+import { EMPTY_TOTAL_STAT, MillData, TotalStat } from "@/types/mill-data";
 import { EMPTY_GRINDING_LEDGER_STAT, GrindingLedger, GrindingLedgerStat } from "@/types/grinding-ledger";
 
 // Rs. 12,000 or Rs. 12,000.5
@@ -39,8 +39,8 @@ export const formateIndDate = (date: Date) => {
 // Server-side Totals Calculator 
 export function calculateTotals(
   rows: MillData[]
-): MonthlyTotalStat {
-  return rows.reduce<MonthlyTotalStat>((acc, row) => {
+): TotalStat {
+  return rows.reduce<TotalStat>((acc, row) => {
     acc.totalCredit += row.totalCredit;
     acc.totalDebit += row.totalDebit;
 
@@ -68,7 +68,7 @@ export function calculateTotals(
     acc.homeDebit += row.homeDebit;
 
     return acc;
-  }, { ...EMPTY_MONTHLY_STAT });
+  }, { ...EMPTY_TOTAL_STAT });
 }
 
 export function calculateGrindingLedgerStats(

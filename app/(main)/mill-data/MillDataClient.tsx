@@ -3,21 +3,19 @@
 import { Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import {
-  EMPTY_MONTHLY_STAT,
+  EMPTY_GRINDING_STAT,
+  EMPTY_TOTAL_STAT,
   MillData,
+  GrindingStat,
   MonthlyStatResponse,
-  MonthlyTotalStat,
+  TotalStat,
 } from "@/types/mill-data";
 import {
   Search,
   X,
-  TrendingUp,
-  TrendingDown,
   Filter,
   Eye,
   EyeOff,
-  Wallet,
-  PiggyBank,
   Calendar,
   DownloadIcon,
 } from "lucide-react";
@@ -33,12 +31,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { formateIndDate, formatRs } from "@/lib/helper";
+import { formateIndDate } from "@/lib/helper";
 
 import MillDataPageSkeleton from "@/components/skelton/MillDataPageSkeleton";
-import StatCard2 from "@/components/millData/StatCard2";
-import StatCard from "@/components/millData/StatCard";
-import StatItem from "@/components/millData/StatItem";
+import SummaryCards from "@/components/millData/SummaryCards";
 import TableComponent from "@/components/millData/TableComponent";
 import { handleExportToExcel } from "@/lib/handleExportToExcel";
 
@@ -66,8 +62,11 @@ function MillDataContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSensitive, setIsSensitive] = useState(true);
   const [rows, setRows] = useState<MillData[]>([]);
-  const [total, setTotal] = useState<MonthlyTotalStat>(EMPTY_MONTHLY_STAT);
-  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState<TotalStat>(EMPTY_TOTAL_STAT);
+  const [grindingStats, setGrindingStats] = useState<GrindingStat>(
+    EMPTY_GRINDING_STAT
+  );
+  const [loading, setLoading] = useState(true);
 
   /* -------- Auth Guard -------- */
   useEffect(() => {
@@ -97,7 +96,10 @@ function MillDataContent() {
 
         const result: MonthlyStatResponse = await res.json();
         setRows(result.data.items ?? []);
-        setTotal(result.data.totals ?? EMPTY_MONTHLY_STAT);
+        setTotal(result.data.totals ?? EMPTY_TOTAL_STAT);
+        setGrindingStats(
+          result.data.grindingStats ?? EMPTY_GRINDING_STAT
+        );
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
@@ -197,131 +199,15 @@ function MillDataContent() {
         </div>
       </div>
 
-      {/* Summary Cards Section */}
-      <div className="grid grid-cols-2 gap-4 lg:gap-6">
-        <StatCard2
-          label="Total Income"
-          icon={Wallet}
-          value={formatRs(income)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          variant="purple"
-        />
-
-        <StatCard2
-          label="Net Savings"
-          icon={PiggyBank}
-          value={formatRs(saving)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-          variant="blue"
-        />
-      </div>
-
-      {/* Analysis Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* creadit data */}
-        <StatCard
-          icon={TrendingUp}
-          label="Total Credits"
-          headerValue={formatRs(total.totalCredit)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-        >
-          <StatItem
-            label="Mill Credit"
-            value={total.millCredit}
-            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
-            colorClass={`text-green-600 dark:text-green-400`}
-            isSensitive={isSensitive}
-          />
-          <StatItem
-            label="Flour"
-            value={total.flourRs}
-            sub={total.flourWeight}
-            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
-            colorClass={`text-green-600 dark:text-green-400`}
-            isSensitive={isSensitive}
-          />
-          <StatItem
-            label="Oil"
-            value={total.oilRs}
-            sub={total.oilWeight}
-            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
-            colorClass={`text-green-600 dark:text-green-400`}
-            isSensitive={isSensitive}
-          />
-          <StatItem
-            label="Khari"
-            value={total.khariRs}
-            sub={total.khariWeight}
-            statItemBgClass={`bg-green-50/40 dark:bg-green-900/10`}
-            colorClass={`text-green-600 dark:text-green-400`}
-            isSensitive={isSensitive}
-          />
-        </StatCard>
-
-        {/* debit data */}
-        <StatCard
-          icon={TrendingDown}
-          label="Total Debits"
-          headerClassName={`bg-red-50/40 dark:bg-red-900/10`}
-          titleClassName={`text-red-600 dark:text-red-400`}
-          headerValueClassName={`text-red-700 dark:text-red-400`}
-          headerValue={formatRs(total.totalDebit)}
-          isLoading={loading}
-          isSensitive={isSensitive}
-        >
-          <StatItem
-            label="Gehum"
-            value={total.gehumRs}
-            sub={total.gehumWeight}
-            statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-            colorClass="text-red-600 dark:text-red-400"
-            isSensitive={isSensitive}
-          />
-          <StatItem
-            label="Sarso"
-            value={total.sarsoRs}
-            sub={total.sarsoWeight}
-            statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-            colorClass="text-red-600 dark:text-red-400"
-            isSensitive={isSensitive}
-          />
-          <div className="grid md:grid-cols-2 gap-2">
-            <StatItem
-              label="Home"
-              value={total.homeDebit}
-              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-              colorClass="text-red-600 dark:text-red-400"
-              isSensitive={isSensitive}
-            />
-            <StatItem
-              label="Mill"
-              value={total.millDebit}
-              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-              colorClass="text-red-600 dark:text-red-400"
-              isSensitive={isSensitive}
-            />
-          </div>
-          <div className="grid md:grid-cols-2 gap-2">
-            <StatItem
-              label="Bhim"
-              value={total.staff1Rs}
-              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-              colorClass="text-red-600 dark:text-red-400"
-              isSensitive={isSensitive}
-            />
-            <StatItem
-              label="Viswa"
-              value={total.staff2Rs}
-              statItemBgClass={`bg-red-50/40 dark:bg-red-900/10`}
-              colorClass="text-red-600 dark:text-red-400"
-              isSensitive={isSensitive}
-            />
-          </div>
-        </StatCard>
-      </div>
+      {/* Summary Cards Grid */}
+      <SummaryCards
+        income={income}
+        saving={saving}
+        grindingStats={grindingStats}
+        data={total}
+        isLoading={loading}
+        isSensitive={isSensitive}
+      />
 
       {/* Table Section */}
       <div className="rounded-xl border border-border shadow-sm bg-card flex flex-col">
@@ -386,6 +272,7 @@ function MillDataContent() {
                   handleExportToExcel({
                     data: rows,
                     totals: total,
+                    grindingStats: grindingStats,
                     year: year,
                     month: month,
                   })

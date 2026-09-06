@@ -1,49 +1,53 @@
-// Milldata with all field
+/**
+ * Core MillData record representing daily mill operations.
+ */
 export interface MillData {
-  id: string
-  userId: string
-  date: Date
+  id: string;
+  userId: string;
+  date: Date;
 
   /* -------- Credits -------- */
-  millCredit: number
+  millCredit: number;
 
-  flourWeight: number
-  flourRs: number
+  flourWeight: number;
+  flourRs: number;
 
-  oilWeight: number
-  oilRs: number
+  oilWeight: number;
+  oilRs: number;
 
-  khariWeight: number
-  khariRs: number
+  khariWeight: number;
+  khariRs: number;
 
-  totalCredit: number
+  totalCredit: number;
 
   /* -------- Debits -------- */
-  sarsoWeight: number
-  sarsoRs: number
+  sarsoWeight: number;
+  sarsoRs: number;
 
-  gehumWeight: number
-  gehumRs: number
+  gehumWeight: number;
+  gehumRs: number;
 
-  staff1Rs: number
-  staff2Rs: number
-  staffDescription?: string | null
+  staff1Rs: number;
+  staff2Rs: number;
+  staffDescription?: string | null;
 
-  millDebit: number
-  millDescription?: string | null
+  millDebit: number;
+  millDescription?: string | null;
 
-  homeDebit: number
-  homeDescription?: string | null
+  homeDebit: number;
+  homeDescription?: string | null;
 
-  totalDebit: number
+  totalDebit: number;
 
   /* -------- Meta -------- */
-  createdAt: Date
-  updatedAt: Date
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// monthly total stat
-export interface MonthlyTotalStat {
+/**
+ * Aggregated totals for credits and debits.
+ */
+export interface TotalStat {
   totalCredit: number;
   totalDebit: number;
 
@@ -71,17 +75,41 @@ export interface MonthlyTotalStat {
   homeDebit: number;
 }
 
-// monthly stat api response 
-export interface MonthlyStatResponse {
-  success: boolean;
-  data: {
-    items: MillData[];
-    totals: MonthlyTotalStat;
-  }
+/**
+ * Aggregated grinding ledger stats (Wheat & Sarso breakdown).
+ * Used across both monthly and yearly pages.
+ */
+export interface GrindingStat {
+  totalWeight: number;
+  wheatWeight: number;
+  sarsoWeight: number;
+  wheatMoney: number;
+  sarsoMoney: number;
+  totalMoney: number;
+  totalRecords: number;
+  wheatRecords: number;
+  sarsoRecords: number;
 }
 
-// EMPTY_MONTHLY_STAT
-export const EMPTY_MONTHLY_STAT: MonthlyTotalStat = {
+/**
+ * Empty/default grinding stat object.
+ */
+export const EMPTY_GRINDING_STAT: GrindingStat = {
+  totalWeight: 0,
+  wheatWeight: 0,
+  sarsoWeight: 0,
+  wheatMoney: 0,
+  sarsoMoney: 0,
+  totalMoney: 0,
+  totalRecords: 0,
+  wheatRecords: 0,
+  sarsoRecords: 0,
+};
+
+/**
+ * Empty/default totals object.
+ */
+export const EMPTY_TOTAL_STAT: TotalStat = {
   totalCredit: 0,
   totalDebit: 0,
   millCredit: 0,
@@ -101,3 +129,14 @@ export const EMPTY_MONTHLY_STAT: MonthlyTotalStat = {
   homeDebit: 0,
 };
 
+/**
+ * API response format for GET /api/mill-data.
+ */
+export interface MonthlyStatResponse {
+  success: boolean;
+  data: {
+    items: MillData[];
+    totals: TotalStat;
+    grindingStats: GrindingStat;
+  };
+}

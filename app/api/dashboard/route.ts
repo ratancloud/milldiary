@@ -7,6 +7,7 @@ import {
   MonthlyMillDebit,
   YearSummaryCard,
 } from "@/types/dashboard";
+import { GrindingStat } from "@/types/mill-data";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -75,16 +76,72 @@ export async function GET(req: NextRequest) {
     const start = new Date(Date.UTC(year, 0, 1));
     const end = new Date(Date.UTC(year + 1, 0, 1));
 
-    /* ---------- Fetch Data ---------- */
-    const rows = await prisma.millData.findMany({
-      where: {
-        userId: session.user.id,
-        date: {
-          gte: start,
-          lt: end,
+    /* ---------- Fetch Data & Grinding Aggregation in Parallel ---------- */
+    const [rows, grindingGroupStats] = await Promise.all([
+      prisma.millData.findMany({
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: start,
+            lt: end,
+          },
         },
-      },
-    });
+      }),
+      prisma.grindingLedger.groupBy({
+        by: ["commodityType"],
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: start,
+            lt: end,
+          },
+        },
+        _sum: {
+          weight: true,
+        },
+        _count: {
+          id: true,
+        },
+      }),
+    ]);
+
+    /* ---------- Yearly Grinding Stats Calculation (O(1)) ---------- */
+    let wheatWeight = 0;
+    let sarsoWeight = 0;
+    let wheatRecords = 0;
+    let sarsoRecords = 0;
+
+    for (const group of grindingGroupStats) {
+      const weight = Number(group._sum?.weight ?? 0);
+      const count = Number(group._count?.id ?? 0);
+      if (group.commodityType === "WHEAT") {
+        wheatWeight = weight;
+        wheatRecords = count;
+      } else if (group.commodityType === "MUSTARD") {
+        sarsoWeight = weight;
+        sarsoRecords = count;
+      }
+    }
+
+    const wheatRate = 3;
+    const sarsoRate = 5;
+    const wheatMoney = Number((wheatWeight * wheatRate).toFixed(2));
+    const sarsoMoney = Number((sarsoWeight * sarsoRate).toFixed(2));
+    const totalWeight = Number((wheatWeight + sarsoWeight).toFixed(2));
+    const totalMoney = Number((wheatMoney + sarsoMoney).toFixed(2));
+    const totalRecords = wheatRecords + sarsoRecords;
+
+    const grindingStats: GrindingStat = {
+      totalWeight,
+      wheatWeight: Number(wheatWeight.toFixed(2)),
+      sarsoWeight: Number(sarsoWeight.toFixed(2)),
+      wheatMoney,
+      sarsoMoney,
+      totalMoney,
+      totalRecords,
+      wheatRecords,
+      sarsoRecords,
+    };
 
     /* ---------- Month Map ---------- */
     const monthMap = new Map<number, ReturnType<typeof initMonth>>();
@@ -229,6 +286,7 @@ export async function GET(req: NextRequest) {
     // Response 
     return apiResponseSuccess({
       summary,
+      grindingStats,
       monthlyCredit,
       monthlyMillDebit,
       monthlyHomeDebit,

@@ -1,3 +1,5 @@
+import { GrindingStat } from "./mill-data";
+
 export interface YearSummaryCard {
   year: number;
   totalCredit: number;
@@ -5,7 +7,7 @@ export interface YearSummaryCard {
   tMillDebit: number;
   tHomeDebit: number;
 
-  tMillCredit: number
+  tMillCredit: number;
   tFlourWeight: number;
   tFlourRs: number;
   tOilWeight: number;
@@ -67,6 +69,7 @@ export interface MonthlyHomeDebit {
 
 export interface MillDashboardResponse {
   summary: YearSummaryCard;
+  grindingStats: GrindingStat;
   monthlyCredit: MonthlyMillCredit[];
   monthlyMillDebit: MonthlyMillDebit[];
   monthlyHomeDebit: MonthlyHomeDebit[];
