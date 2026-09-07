@@ -7,10 +7,6 @@ import {
   Sparkles,
   PenLine,
   AlertTriangle,
-  CheckCircle2,
-  Cpu,
-  Languages,
-  Layers,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -109,7 +105,7 @@ export default function NewGrindingLedgerClient() {
   );
 
   return (
-    <div className="container max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-5">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* 1. Breadcrumbs */}
       <PageHeader
         onBack={() => handleAttemptNavigate("back")}

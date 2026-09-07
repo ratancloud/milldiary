@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,6 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface DayScrollerProps {
   selectedDate: string; // YYYY-MM-DD
@@ -26,8 +38,8 @@ const DayScroller: React.FC<DayScrollerProps> = ({
   selectedDate,
   onSelectDate,
 }) => {
-  // We keep an independent anchor/center date so clicking days in the strip DOES NOT auto-scroll or re-center
   const [centerDateStr, setCenterDateStr] = useState(selectedDate);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const todayStr = useMemo(() => {
     const now = new Date();
@@ -37,11 +49,11 @@ const DayScroller: React.FC<DayScrollerProps> = ({
     return `${y}-${m}-${d}`;
   }, []);
 
-  // Parse center Date in local/UTC
+  // Parse center Date
   const centerDateObj = useMemo(() => {
-    const [y, m, d] = centerDateStr.split("-").map(Number);
+    const [y, m, d] = (centerDateStr || todayStr).split("-").map(Number);
     return new Date(y, (m || 1) - 1, d || 1);
-  }, [centerDateStr]);
+  }, [centerDateStr, todayStr]);
 
   const currentYear = centerDateObj.getFullYear();
   const currentMonth = centerDateObj.getMonth();
@@ -123,18 +135,37 @@ const DayScroller: React.FC<DayScrollerProps> = ({
     onSelectDate(todayStr);
   };
 
+  const handleCalendarSelect = (d: Date | undefined) => {
+    if (!d) return;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const newDateStr = `${y}-${m}-${day}`;
+    setCenterDateStr(newDateStr);
+    onSelectDate(newDateStr);
+    setCalendarOpen(false);
+  };
+
+  const isCurrentSelectionToday = selectedDate === todayStr;
+
+  const currentYearOptions = useMemo(() => {
+    const thisYear = new Date().getFullYear();
+    return [thisYear - 2, thisYear - 1, thisYear, thisYear + 1];
+  }, []);
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-2 sm:p-3 md:p-4 shadow-sm space-y-2 sm:space-y-3">
-      {/* Top Controls: Month, Year, and Today Button */}
-      <div className="flex items-center justify-between gap-1.5 sm:gap-2 flex-wrap">
+    <div className="rounded-2xl border border-border/80 dark:border-white/10 bg-card p-3 sm:p-4 shadow-[var(--card-shadow)] space-y-3">
+      {/* Top Controls: Month, Year, Custom Picker, and Today Button */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Left: Month + Year Selectors */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Select value={String(currentMonth)} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[95px] sm:w-[130px] h-8 sm:h-9 font-bold text-xs sm:text-sm bg-muted/30 px-2 sm:px-3">
+            <SelectTrigger className="w-[105px] sm:w-[125px] h-8 sm:h-9 font-bold text-xs rounded-xl border-border/80 bg-secondary/40 hover:bg-secondary/70 transition-all cursor-pointer">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border shadow-lg">
               {MONTHS.map((m) => (
-                <SelectItem key={m.value} value={m.value} className="font-medium text-xs sm:text-sm">
+                <SelectItem key={m.value} value={m.value} className="font-semibold text-xs">
                   {m.fullLabel}
                 </SelectItem>
               ))}
@@ -142,70 +173,110 @@ const DayScroller: React.FC<DayScrollerProps> = ({
           </Select>
 
           <Select value={String(currentYear)} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[75px] sm:w-[95px] h-8 sm:h-9 font-bold text-xs sm:text-sm bg-muted/30 font-mono px-2 sm:px-3">
+            <SelectTrigger className="w-[80px] sm:w-[95px] h-8 sm:h-9 font-bold text-xs rounded-xl border-border/80 bg-secondary/40 hover:bg-secondary/70 font-mono transition-all cursor-pointer">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map((y) => (
-                <SelectItem key={y} value={String(y)} className="font-mono text-xs sm:text-sm">
+            <SelectContent className="rounded-xl border-border shadow-lg font-mono">
+              {currentYearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">
                   {y}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {/* Quick Calendar Popover Picker */}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 sm:h-9 w-8 sm:w-9 rounded-xl border-border/80 bg-secondary/40 hover:bg-secondary/70 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                title="Open calendar picker"
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-0 rounded-2xl border-border shadow-xl">
+              <Calendar
+                mode="single"
+                selected={selectedDate ? new Date(`${selectedDate}T00:00:00`) : undefined}
+                onSelect={handleCalendarSelect}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
+        {/* Right: Today Jump Button */}
         <Button
-          variant="outline"
+          variant={isCurrentSelectionToday ? "outline" : "default"}
           size="sm"
           onClick={handleJumpToday}
-          disabled={selectedDate === todayStr}
-          className="h-8 sm:h-9 px-2.5 sm:px-3 gap-1 sm:gap-1.5 font-bold text-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 shrink-0"
+          disabled={isCurrentSelectionToday}
+          className={cn(
+            "h-8 sm:h-9 px-3 rounded-xl gap-1.5 font-bold text-xs transition-all cursor-pointer active:scale-[0.98]",
+            isCurrentSelectionToday
+              ? "opacity-60 border-border/80 bg-secondary/30 text-muted-foreground cursor-default"
+              : "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+          )}
         >
-          <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          Today
+          <RotateCcw className="w-3 h-3" />
+          <span>Today</span>
         </Button>
       </div>
 
       {/* 7-Day Horizontal Strip with Shift Arrows */}
-      <div className="flex items-center gap-0.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
+        {/* Previous Week */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={() => handleShiftDays(-7)}
-          className="h-10 w-6 sm:h-12 sm:w-10 rounded-lg sm:rounded-xl text-muted-foreground hover:text-foreground shrink-0 p-0"
+          className="h-12 sm:h-14 w-8 sm:w-10 rounded-xl border-border/80 bg-secondary/30 hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0 transition-all cursor-pointer active:scale-95"
           title="Previous 7 days"
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
 
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-2 flex-1 min-w-0">
+        {/* 7 Day Tiles */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-w-0">
           {daysStrip.map((item) => {
             const isSelected = item.dateStr === selectedDate;
             return (
               <button
                 key={item.dateStr}
+                type="button"
                 onClick={() => onSelectDate(item.dateStr)}
-                className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-0 rounded-lg sm:rounded-xl transition-all border select-none min-w-0 ${isSelected
-                  ? "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02] font-bold"
-                  : "bg-muted/30 hover:bg-muted/60 border-border/60 text-foreground font-medium"
-                  }`}
+                className={cn(
+                  "flex flex-col items-center justify-center py-2 sm:py-2.5 px-0 rounded-xl transition-all duration-150 border select-none min-w-0 cursor-pointer relative",
+                  isSelected
+                    ? "bg-primary border-primary text-primary-foreground shadow-xs scale-[1.02] font-bold"
+                    : "bg-secondary/35 hover:bg-secondary/80 border-border/60 text-foreground font-medium active:scale-98"
+                )}
               >
                 <span
-                  className={`text-[9px] sm:text-xs uppercase tracking-tight sm:tracking-wider leading-none whitespace-nowrap ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
-                    }`}
+                  className={cn(
+                    "text-[9px] sm:text-[11px] uppercase font-mono tracking-wider leading-none whitespace-nowrap",
+                    isSelected ? "text-primary-foreground/80 font-bold" : "text-muted-foreground"
+                  )}
                 >
                   {item.dayName}
                 </span>
-                <span className="text-xs sm:text-lg font-extrabold font-mono mt-1 sm:mt-0.5 leading-none">
+                <span className="text-sm sm:text-lg font-black font-mono mt-1 sm:mt-0.5 leading-none tabular-nums">
                   {item.dayNumber}
                 </span>
-                {item.isToday && !isSelected && (
-                  <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-primary mt-1"></span>
-                )}
-                {item.isToday && isSelected && (
-                  <span className="text-[7px] sm:text-[9px] bg-primary-foreground/20 text-primary-foreground px-1 sm:px-1.5 py-0 rounded-full mt-0.5 font-bold leading-tight whitespace-nowrap tracking-tighter sm:tracking-normal">
-                    TODAY
+
+                {item.isToday && (
+                  <span
+                    className={cn(
+                      "mt-1 text-[8px] font-bold font-mono tracking-tight uppercase leading-none px-1 rounded-sm",
+                      isSelected
+                        ? "bg-white/20 text-primary-foreground"
+                        : "text-primary"
+                    )}
+                  >
+                    {isSelected ? "TODAY" : "•"}
                   </span>
                 )}
               </button>
@@ -213,11 +284,12 @@ const DayScroller: React.FC<DayScrollerProps> = ({
           })}
         </div>
 
+        {/* Next Week */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={() => handleShiftDays(7)}
-          className="h-10 w-6 sm:h-12 sm:w-10 rounded-lg sm:rounded-xl text-muted-foreground hover:text-foreground shrink-0 p-0"
+          className="h-12 sm:h-14 w-8 sm:w-10 rounded-xl border-border/80 bg-secondary/30 hover:bg-secondary text-muted-foreground hover:text-foreground shrink-0 transition-all cursor-pointer active:scale-95"
           title="Next 7 days"
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />

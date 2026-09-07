@@ -5,28 +5,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GrindingLedgerPageSkeleton() {
   return (
-    <div className="container max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-4 md:space-y-6">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* ── Page Top Header Bar Skeleton ── */}
       <div className="flex items-center justify-between">
         <Skeleton className="h-9 w-24 rounded-md shadow-sm" />
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-10 w-24 rounded-xl shadow-sm" />
           <Skeleton className="h-10 w-20 rounded-xl shadow-sm" />
-        </div>
-      </div>
-
-      {/* ── Stats Card Skeleton ── */}
-      <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <Skeleton className="w-10 h-10 rounded-xl" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-36 rounded-md" />
-            <Skeleton className="h-3.5 w-52 rounded-md" />
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Skeleton className="h-3 w-16 rounded-md" />
-          <Skeleton className="h-5 w-24 rounded-md" />
         </div>
       </div>
 
@@ -45,6 +30,14 @@ export default function GrindingLedgerPageSkeleton() {
       <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Skeleton className="h-10 w-full sm:w-56 rounded-xl" />
         <Skeleton className="h-10 w-full sm:w-[280px] rounded-xl" />
+      </div>
+
+      {/* ── Slips & Commodity Totals Skeleton ── */}
+      <div className="flex items-center justify-between px-4 py-3 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-4 w-24 rounded-md" />
+        </div>
       </div>
 
       {/* ── Table/Cards Skeleton ── */}

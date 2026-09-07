@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, memo } from "react";
+import Link from "next/link";
 import { GrindingLedger } from "@/types/grinding-ledger";
 import { formateIndDate, formatKg } from "@/lib/helper";
 import {
@@ -17,8 +18,12 @@ import {
   Edit,
   Trash2,
   NotebookText,
-  AlertCircle,
+  AlertTriangle,
   MoreVertical,
+  Wheat,
+  Sprout,
+  MapPin,
+  Plus,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -37,7 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import { cn } from "@/lib/utils";
 
 interface GrindingLedgerTableProps {
   items: GrindingLedger[];
@@ -47,11 +52,13 @@ interface GrindingLedgerTableProps {
 }
 
 /* ─────────────────────────────────────────────
-   Premium Mobile Card  (memoised – skip re-render on unrelated state)
-   Rate: ₹3 per kg — hardcoded, update when API provides dynamic rate
+   Rate: ₹3 per kg (standard default)
 ───────────────────────────────────────────── */
-const RATE_PER_KG = 3; // ₹ per kg
+const RATE_PER_KG = 3;
 
+/* ─────────────────────────────────────────────
+   Mobile Card (Memoized — matching reference design)
+───────────────────────────────────────────── */
 const MobileCard = memo(function MobileCard({
   row,
   onEdit,
@@ -67,81 +74,73 @@ const MobileCard = memo(function MobileCard({
   return (
     <div
       style={{ contentVisibility: "auto", containIntrinsicSize: "0 110px" }}
-      className="relative flex rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm active:scale-[0.99] transition-transform"
+      className="relative flex rounded-2xl border border-border/80 dark:border-white/10 bg-card overflow-hidden shadow-2xs active:scale-[0.99] transition-transform"
     >
-      {/* ── Left panel: serial circle + commodity label at bottom ── */}
-      <div className="flex flex-col items-center justify-between gap-0 px-3 py-3 bg-primary/8 border-r border-border/40 shrink-0 min-w-[52px]">
-        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-mono font-black text-xs shadow-sm">
+      {/* Left panel: serial circle at top + commodity label at bottom */}
+      <div className="flex flex-col items-center justify-between gap-1 p-2.5 sm:p-3 bg-secondary/40 dark:bg-white/[0.04] border-r border-border/70 dark:border-white/10 shrink-0 min-w-[56px] sm:min-w-[62px]">
+        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-mono font-bold text-xs shadow-xs">
           {row.serialNo}
         </div>
-        <span className="text-[9px] font-bold text-primary/70 mt-1 tracking-wide leading-none">
-          {isWheat ? "Wheat" : "Sarso"}
+        <span className="text-[10px] sm:text-[11px] font-bold text-primary dark:text-primary/90 tracking-wide leading-none capitalize mt-2">
+          {isWheat ? "Wheat" : "Mustard"}
         </span>
       </div>
 
-      {/* ── Main content ── */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between py-2.5 px-3 gap-1">
-        {/* Top row: name block */}
-        <div className="min-w-0">
-          <p
-            className="font-bold text-[14px] text-foreground leading-snug"
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          >
+      {/* Main content */}
+      <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col justify-between gap-1.5">
+        {/* Top block: Customer names and village */}
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-bold text-sm sm:text-[15px] text-foreground leading-snug truncate">
             {row.customerNameEn}
           </p>
-          <p
-            className="text-[11px] text-muted-foreground font-hindi"
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "1.6" }}
-          >
-            {row.customerNameHi}
-          </p>
-          <p
-            className="text-[10px] text-muted-foreground/65 mt-0.5"
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          >
+          {row.customerNameHi && (
+            <p className="text-xs text-muted-foreground font-hindi leading-tight truncate">
+              {row.customerNameHi}
+            </p>
+          )}
+          <p className="text-[11px] text-muted-foreground/75 truncate mt-0.5">
             {row.villageEn}
-            {row.villageHi
-              ? <span className="font-hindi text-muted-foreground/50"> / {row.villageHi}</span>
-              : null}
+            {row.villageHi ? ` / ${row.villageHi}` : ""}
           </p>
         </div>
 
-        {/* Bottom row: weight + price + actions */}
-        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/40">
-          {/* Weight & price pill */}
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-extrabold text-[15px] tabular-nums text-foreground leading-none">
+        {/* Bottom row: Weight · Price and 3-dot menu */}
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-baseline gap-1">
+            <span className="font-extrabold text-[15px] sm:text-base tabular-nums text-foreground leading-none">
               {formatKg(row.weight)}
-              <span className="text-[10px] font-normal text-muted-foreground ml-0.5">kg</span>
             </span>
-            <span className="text-[11px] font-semibold text-primary tabular-nums leading-none">
-              · ₹{totalPrice}
+            <span className="text-[11px] font-normal text-muted-foreground ml-0.5">kg</span>
+            <span className="text-muted-foreground/60 mx-1">·</span>
+            <span className="text-xs sm:text-sm font-bold text-primary tabular-nums leading-none">
+              ₹{totalPrice}
             </span>
           </div>
 
-          {/* 3-dot actions dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg -mr-1 shrink-0"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg -mr-1 shrink-0 cursor-pointer"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36 rounded-xl shadow-lg">
+            <DropdownMenuContent align="end" className="w-36 rounded-xl border-border shadow-xl">
               <DropdownMenuItem
                 onClick={() => onEdit(row)}
-                className="cursor-pointer flex items-center gap-2 font-medium py-2 text-sm"
+                className="cursor-pointer flex items-center gap-2 font-medium py-2 text-xs"
               >
-                <Edit className="h-3.5 w-3.5 text-blue-500" /> Edit
+                <Edit className="h-3.5 w-3.5 text-primary" />
+                <span>Edit Slip</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onSetDeleting(row)}
-                className="cursor-pointer flex items-center gap-2 font-medium py-2 text-sm text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+                className="cursor-pointer flex items-center gap-2 font-medium py-2 text-xs text-destructive focus:text-destructive focus:bg-destructive/10"
               >
-                <Trash2 className="h-3.5 w-3.5" /> Delete
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Delete Slip</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -152,9 +151,7 @@ const MobileCard = memo(function MobileCard({
 });
 
 /* ─────────────────────────────────────────────
-   Chunked list: renders first 30, then streams
-   remaining in idle-callback batches so the
-   initial paint is always fast.
+   Chunked list for performance
 ───────────────────────────────────────────── */
 const INITIAL_BATCH = 30;
 const BATCH_SIZE = 30;
@@ -164,12 +161,10 @@ function useChunkedItems(items: GrindingLedger[]) {
     Math.min(INITIAL_BATCH, items.length)
   );
 
-  // Reset when list changes (new date / filter)
   useEffect(() => {
     setVisibleCount(Math.min(INITIAL_BATCH, items.length));
   }, [items]);
 
-  // Incrementally reveal more rows while browser is idle
   useEffect(() => {
     if (visibleCount >= items.length) return;
 
@@ -189,7 +184,7 @@ function useChunkedItems(items: GrindingLedger[]) {
 }
 
 /* ─────────────────────────────────────────────
-   Main table component
+   Main Table Component
 ───────────────────────────────────────────── */
 const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
   items,
@@ -214,61 +209,61 @@ const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {/* Desktop skeleton matching real table columns */}
-        <div className="hidden md:block rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-          <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-5 w-16" />
+        {/* Desktop skeleton */}
+        <div className="hidden md:block rounded-2xl border border-border/80 dark:border-white/10 bg-card overflow-hidden shadow-[var(--card-shadow)]">
+          <div className="p-4 border-b border-border/60 bg-secondary/30 flex items-center justify-between">
+            <Skeleton className="h-5 w-24 rounded-md" />
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-28 rounded-md" />
+            <Skeleton className="h-5 w-44 rounded-md" />
+            <Skeleton className="h-5 w-32 rounded-md" />
+            <Skeleton className="h-5 w-24 rounded-md" />
+            <Skeleton className="h-5 w-16 rounded-md" />
           </div>
-          <div className="divide-y divide-border/60 p-4 space-y-4">
+          <div className="divide-y divide-border/50 p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between py-2">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-5 w-12" />
+              <div key={i} className="flex items-center justify-between py-2.5">
+                <Skeleton className="h-4 w-24 rounded-md" />
+                <Skeleton className="h-4 w-12 rounded-md" />
                 <Skeleton className="h-6 w-20 rounded-full" />
                 <div className="space-y-1">
-                  <Skeleton className="h-4 w-36" />
-                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-36 rounded-md" />
+                  <Skeleton className="h-3 w-20 rounded-md" />
                 </div>
-                <div className="space-y-1">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-                <Skeleton className="h-5 w-20" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                  <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <Skeleton className="h-4 w-20 rounded-md" />
+                <div className="flex gap-1.5">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Mobile skeleton matching real MobileCard structure */}
+        {/* Mobile skeleton */}
         <div className="block md:hidden space-y-2.5">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="relative flex rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm h-[110px]"
+              className="flex rounded-2xl border border-border/80 dark:border-white/10 bg-card overflow-hidden shadow-2xs h-[108px]"
             >
-              <div className="w-[52px] bg-primary/5 border-r border-border/40 flex flex-col items-center justify-center gap-2 p-2 shrink-0">
+              {/* Left vertical strip skeleton */}
+              <div className="flex flex-col items-center justify-between p-2.5 sm:p-3 bg-secondary/40 dark:bg-white/[0.04] border-r border-border/70 dark:border-white/10 shrink-0 min-w-[56px] sm:min-w-[62px]">
                 <Skeleton className="w-8 h-8 rounded-full" />
-                <Skeleton className="w-6 h-3 rounded-full" />
+                <Skeleton className="h-2.5 w-9 rounded-sm mt-2" />
               </div>
-              <div className="flex-1 p-3 flex flex-col justify-between">
+
+              {/* Right main content skeleton */}
+              <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div className="space-y-1.5">
-                  <Skeleton className="h-4 w-3/4 rounded-md" />
-                  <Skeleton className="h-3 w-1/2 rounded-md" />
-                  <Skeleton className="h-3 w-2/3 rounded-md" />
+                  <Skeleton className="h-4 w-36 rounded" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                  <Skeleton className="h-2.5 w-28 rounded" />
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                  <Skeleton className="h-4 w-28 rounded-md" />
-                  <Skeleton className="h-7 w-7 rounded-lg" />
+                <div className="flex items-center justify-between pt-1">
+                  <Skeleton className="h-4 w-24 rounded" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
                 </div>
               </div>
             </div>
@@ -280,30 +275,42 @@ const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
 
   if (!items || items.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-8 md:p-12 text-center bg-card/50 flex flex-col items-center justify-center gap-3">
-        <div className="p-4 rounded-full bg-muted/60 text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-border/80 bg-card/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-3.5 shadow-2xs">
+        <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
           <NotebookText className="w-8 h-8" />
         </div>
-        <h3 className="font-bold text-lg text-foreground">No Ledger Records Found</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
-          No grinding slips found for the selected filter criteria. Try changing the month, commodity type, or click &quot;+ Add Entry&quot; or &quot;AI OCR Upload&quot; to get started.
-        </p>
+        <div className="space-y-1 max-w-md">
+          <h3 className="font-bold text-base sm:text-lg text-foreground tracking-tight">
+            No Grinding Records Found
+          </h3>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            There are no customer slips logged for the selected date and filter. Switch commodity types, select another day, or log a new slip.
+          </p>
+        </div>
+        <Button
+          className="mt-2 rounded-xl text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer active:scale-[0.98]"
+          asChild
+        >
+          <Link href="/grinding-ledger/new">
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create New Slip</span>
+          </Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* ─── Mobile List (compact, chunked, content-visibility) ─── */}
-      <div className="block md:hidden space-y-1.5">
-        {/* Count header */}
-        <div className="flex items-center justify-between px-1 pb-0.5">
-          <span className="text-xs text-muted-foreground font-medium">
-            {items.length} slip{items.length !== 1 ? "s" : ""}
+      {/* ─── Mobile View (Cards) ─── */}
+      <div className="block md:hidden space-y-2.5">
+        <div className="flex items-center justify-between px-1 text-xs text-muted-foreground font-semibold">
+          <span>
+            {items.length} {items.length === 1 ? "Slip" : "Slips"} found
           </span>
           {visibleItems.length < items.length && (
-            <span className="text-[10px] text-muted-foreground/60">
-              Showing {visibleItems.length}…
+            <span className="text-[11px] font-mono text-muted-foreground/70">
+              Showing {visibleItems.length} of {items.length}
             </span>
           )}
         </div>
@@ -318,79 +325,110 @@ const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
         ))}
       </div>
 
-      {/* ─── Desktop Table ─── */}
-      <div className="hidden md:block rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* ─── Desktop View (Table) ─── */}
+      <div className="hidden md:block rounded-2xl border border-border/80 dark:border-white/10 bg-card shadow-[var(--card-shadow)] overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead className="w-[110px] font-bold">Date</TableHead>
-                <TableHead className="w-[80px] text-center font-bold">S.No</TableHead>
-                <TableHead className="w-[120px] font-bold">Commodity</TableHead>
-                <TableHead className="font-bold">Customer Name</TableHead>
-                <TableHead className="font-bold">Village</TableHead>
-                <TableHead className="text-right font-bold">Weight (Kg)</TableHead>
-                <TableHead className="w-[100px] text-center font-bold">Actions</TableHead>
+            <TableHeader className="bg-secondary/40 border-b border-border/70">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[115px] font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Date
+                </TableHead>
+                <TableHead className="w-[85px] text-center font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  S.No
+                </TableHead>
+                <TableHead className="w-[130px] font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Commodity
+                </TableHead>
+                <TableHead className="font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Customer
+                </TableHead>
+                <TableHead className="font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Village
+                </TableHead>
+                <TableHead className="text-right font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Weight (Kg)
+                </TableHead>
+                <TableHead className="text-right font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Amount
+                </TableHead>
+                <TableHead className="w-[105px] text-center font-bold font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-border/50">
               {items.map((row) => {
                 const isWheat = row.commodityType === "WHEAT";
+                const totalPrice = Math.round(row.weight * RATE_PER_KG);
                 return (
-                  <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
-                    <TableCell className="font-medium whitespace-nowrap">
+                  <TableRow key={row.id} className="hover:bg-secondary/30 transition-colors">
+                    <TableCell className="font-mono text-xs font-medium whitespace-nowrap text-muted-foreground">
                       {formateIndDate(new Date(row.date))}
                     </TableCell>
-                    <TableCell className="text-center font-bold font-mono">
-                      #{row.serialNo}
+                    <TableCell className="text-center font-bold font-mono text-xs">
+                      <span className="px-2 py-0.5 rounded-md bg-secondary/80 text-foreground border border-border/50">
+                        #{row.serialNo}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="bg-primary/10 text-primary border-primary/30 font-semibold"
+                        className={cn(
+                          "text-xs font-bold gap-1 px-2.5 py-0.5 rounded-lg border",
+                          isWheat
+                            ? "bg-primary/10 text-primary border-primary/25"
+                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25"
+                        )}
                       >
-                        {isWheat ? "Wheat" : "Mustard"}
+                        {isWheat ? <Wheat className="w-3.5 h-3.5" /> : <Sprout className="w-3.5 h-3.5" />}
+                        <span>{isWheat ? "Wheat" : "Mustard"}</span>
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-foreground">
+                        <span className="font-bold text-sm text-foreground">
                           {row.customerNameEn}
                         </span>
-                        <span className="text-xs text-muted-foreground font-hindi">
-                          {row.customerNameHi}
-                        </span>
+                        {row.customerNameHi && (
+                          <span className="text-xs text-muted-foreground font-hindi">
+                            {row.customerNameHi}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">
-                          {row.villageEn}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-hindi">
-                          {row.villageHi}
-                        </span>
+                      <div className="flex items-center gap-1.5 text-sm text-foreground">
+                        <MapPin className="w-3.5 h-3.5 text-primary shrink-0 opacity-70" />
+                        <span className="font-medium">{row.villageEn}</span>
+                        {row.villageHi && (
+                          <span className="text-xs text-muted-foreground font-hindi">
+                            ({row.villageHi})
+                          </span>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-bold tabular-nums text-foreground">
-                      {formatKg(row.weight)} Kg
+                    <TableCell className="text-right font-black tabular-nums text-foreground">
+                      {formatKg(row.weight)} <span className="text-xs font-normal text-muted-foreground">kg</span>
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-bold text-xs text-primary tabular-nums">
+                      ₹{totalPrice}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-blue-500"
+                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary/70 transition-colors cursor-pointer"
                           onClick={() => onEdit(row)}
                           title="Edit Entry"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                           onClick={() => setDeletingRow(row)}
                           title="Delete Entry"
                         >
@@ -411,21 +449,29 @@ const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
         open={!!deletingRow}
         onOpenChange={(open: boolean) => !open && setDeletingRow(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border border-border/80 dark:border-white/10 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" /> Delete Grinding Record?
+            <AlertDialogTitle className="flex items-center gap-2.5 text-destructive">
+              <div className="h-9 w-9 rounded-xl bg-destructive/15 border border-destructive/25 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <span>Delete Grinding Record?</span>
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete slip{" "}
-              <span className="font-bold text-foreground">
+            <AlertDialogDescription className="text-xs sm:text-sm text-muted-foreground leading-relaxed pt-1">
+              Are you sure you want to permanently delete slip{" "}
+              <strong className="text-foreground">
                 #{deletingRow?.serialNo} ({deletingRow?.customerNameEn})
-              </span>{" "}
-              for {deletingRow?.commodityType}? This action cannot be undone.
+              </strong>{" "}
+              for {deletingRow?.commodityType === "WHEAT" ? "Wheat" : "Mustard"}? This operation cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingRow(null)}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-4 gap-2 sm:gap-0">
+            <AlertDialogCancel
+              onClick={() => setDeletingRow(null)}
+              className="rounded-xl border border-border/80 hover:bg-secondary/70 text-xs font-semibold cursor-pointer"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (deletingRow) {
@@ -433,7 +479,7 @@ const GrindingLedgerTable: React.FC<GrindingLedgerTableProps> = ({
                   setDeletingRow(null);
                 }
               }}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-bold cursor-pointer active:scale-95"
             >
               Delete Record
             </AlertDialogAction>

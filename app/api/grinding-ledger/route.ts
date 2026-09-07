@@ -36,12 +36,12 @@ export async function GET(req: NextRequest) {
 
     where.date = new Date(dateStr);
 
-    if (commodityType && commodityType !== "ALL" && (commodityType === "WHEAT" || commodityType === "MUSTARD")) {
-      where.commodityType = commodityType;
-    }
-
-    const items = await prisma.grindingLedger.findMany({
-      where,
+    // Fetch all records for this date to compute comprehensive daily stats (both Wheat & Sarso)
+    const allRecordsForDate = await prisma.grindingLedger.findMany({
+      where: {
+        userId: session.user.id,
+        date: new Date(dateStr),
+      },
       orderBy: [
         { date: "desc" },
         { commodityType: "asc" },
@@ -49,7 +49,13 @@ export async function GET(req: NextRequest) {
       ],
     });
 
-    const stats = calculateGrindingLedgerStats(items);
+    const stats = calculateGrindingLedgerStats(allRecordsForDate);
+
+    // Filter items to requested commodity type for table display
+    const items =
+      commodityType && commodityType !== "ALL"
+        ? allRecordsForDate.filter((r) => r.commodityType === commodityType)
+        : allRecordsForDate;
 
     return apiResponseSuccess({
       items,

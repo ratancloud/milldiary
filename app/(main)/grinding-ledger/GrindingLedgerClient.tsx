@@ -10,6 +10,8 @@ import {
   X,
   DownloadIcon,
   Plus,
+  Wheat,
+  Sprout,
 } from "lucide-react";
 import {
   EMPTY_GRINDING_LEDGER_STAT,
@@ -18,14 +20,15 @@ import {
 } from "@/types/grinding-ledger";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-import GrindingLedgerStats from "@/components/grindingLedger/GrindingLedgerStats";
 import { PageHeader } from "@/components/layout/PageHeader";
 import GrindingLedgerTable from "@/components/grindingLedger/GrindingLedgerTable";
 import GrindingLedgerCreateModal from "@/components/grindingLedger/GrindingLedgerCreateModal";
 import DayScroller from "@/components/grindingLedger/DayScroller";
 import GrindingLedgerPageSkeleton from "@/components/skelton/GrindingLedgerPageSkeleton";
 import { handleExportGrindingLedger } from "@/lib/handleExportGrindingLedger";
+import { formatKg } from "@/lib/helper";
 
 export default function GrindingLedgerClient() {
   const router = useRouter();
@@ -158,36 +161,33 @@ export default function GrindingLedgerClient() {
   if (!session?.user) return null;
 
   return (
-    <div className="container max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-4 md:space-y-6">
-      {/* Page Breadcrumb & Header */}
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Page Breadcrumb & Header Actions */}
       <PageHeader
-        items={[
-          { label: "Grinding Ledger" },
-        ]}
+        items={[{ label: "Grinding Ledger" }]}
         actions={
-          <>
+          <div className="flex items-center gap-2">
             <Button
               onClick={handleExport}
               variant="outline"
-              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-3.5 rounded-xl border-border/80 hover:bg-secondary active:scale-[0.98] transition-all"
+              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-3.5 rounded-xl border-border/80 hover:bg-secondary active:scale-[0.98] transition-all cursor-pointer shadow-xs"
               title="Export Excel"
             >
-              <DownloadIcon className="w-4 h-4 shrink-0" />
+              <DownloadIcon className="w-4 h-4 shrink-0 text-primary" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
 
             <Button
               type="button"
               onClick={() => router.push("/grinding-ledger/new")}
-              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_2px_12px_rgba(166,83,46,0.28)] active:scale-[0.98] transition-all cursor-pointer"
+              className="gap-1.5 font-bold text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs active:scale-[0.98] transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4 shrink-0 stroke-[2.5]" />
+              <span>New Slip</span>
             </Button>
-          </>
+          </div>
         }
       />
-
-      {/* Compact Collapsible Daily Stat Card */}
-      <GrindingLedgerStats stats={stats} isLoading={loading || isSessionPending} />
 
       {/* 7-Day Scroller & Date Jump Controls */}
       <DayScroller
@@ -196,47 +196,81 @@ export default function GrindingLedgerClient() {
       />
 
       {/* Toolbar: Commodity Toggle & Client-Side Search */}
-      <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="rounded-2xl border border-border/80 dark:border-white/10 bg-card p-3 sm:p-4 shadow-[var(--card-shadow)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Two-Way Commodity Toggle */}
-        <div className="flex items-center p-1 bg-muted/60 rounded-xl text-xs font-bold sm:w-auto">
+        <div className="flex w-full sm:w-auto items-center p-1 rounded-xl bg-secondary/50 dark:bg-secondary/30 border border-border/80 dark:border-white/10 shadow-2xs shrink-0">
           <button
+            type="button"
             onClick={() => setCommodityFilter("WHEAT")}
-            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${commodityFilter === "WHEAT"
-              ? "bg-primary text-primary-foreground shadow-sm scale-[1.02]"
-              : "text-muted-foreground hover:text-foreground"
-              }`}
+            className={cn(
+              "flex-1 sm:flex-initial h-8 sm:h-9 px-3.5 sm:px-4 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]",
+              commodityFilter === "WHEAT"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            Wheat (गेहूं)
+            <Wheat className="w-3.5 h-3.5 shrink-0" />
+            <span>Wheat (गेहूं)</span>
           </button>
           <button
+            type="button"
             onClick={() => setCommodityFilter("MUSTARD")}
-            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${commodityFilter === "MUSTARD"
-              ? "bg-primary text-primary-foreground shadow-sm scale-[1.02]"
-              : "text-muted-foreground hover:text-foreground"
-              }`}
+            className={cn(
+              "flex-1 sm:flex-initial h-8 sm:h-9 px-3.5 sm:px-4 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]",
+              commodityFilter === "MUSTARD"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            Mustard (सरसों)
+            <Sprout className="w-3.5 h-3.5 shrink-0" />
+            <span>Mustard (सरसों)</span>
           </button>
         </div>
 
         {/* Instant Search Input */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1 sm:w-[280px]">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+          <div className="relative flex-1 sm:w-[300px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search client, village, #S.No..."
+              placeholder="Search customer, village, #S.No..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 h-10 text-sm font-medium rounded-xl border-border/80 bg-background/50 focus:bg-background transition-all"
+              className="pl-10 pr-9 h-9 sm:h-10 text-xs sm:text-sm font-medium rounded-xl border-border/80 bg-background/60 focus:bg-background transition-all shadow-2xs"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer transition-colors"
+                aria-label="Clear search query"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Slips Count & Commodity Totals Summary Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80 backdrop-blur-sm shadow-2xs">
+        {/* Totals: Wheat and Sarso */}
+        <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground font-medium">Wheat:</span>
+            <span className="font-bold tabular-nums text-foreground">
+              {loading ? "—" : formatKg(stats.wheatWeight)}{" "}
+              <span className="text-[11px] font-normal text-muted-foreground">kg</span>
+            </span>
+          </div>
+
+          <div className="h-3.5 w-px bg-border/80 dark:border-white/10" />
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground font-medium">Sarso:</span>
+            <span className="font-bold tabular-nums text-foreground">
+              {loading ? "—" : formatKg(stats.mustardWeight)}{" "}
+              <span className="text-[11px] font-normal text-muted-foreground">kg</span>
+            </span>
           </div>
         </div>
       </div>

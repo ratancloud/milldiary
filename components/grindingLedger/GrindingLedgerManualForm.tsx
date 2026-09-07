@@ -185,8 +185,9 @@ const GrindingLedgerManualForm: React.FC<GrindingLedgerManualFormProps> = ({
   return (
     <div
       className={cn(
-        !isEditing &&
-        "rounded-2xl border border-border/80 dark:border-white/10 bg-card p-4 sm:p-6 shadow-[var(--card-shadow)] space-y-6"
+        isEditing
+          ? "p-4 sm:p-6 space-y-6"
+          : "rounded-2xl border border-border/80 dark:border-white/10 bg-card p-4 sm:p-6 shadow-[var(--card-shadow)] space-y-6"
       )}
     >
       {/* Card Header with Integrated Mode Switch */}
