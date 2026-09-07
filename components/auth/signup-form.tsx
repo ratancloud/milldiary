@@ -4,7 +4,8 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Mail, Lock, User, Eye, EyeOff, NotebookTextIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -92,12 +93,7 @@ export default function SignUpForm() {
       <CardHeader className="space-y-1 text-center">
         {/* Brand Logo Section */}
         <div className="flex justify-center mb-4">
-          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-              <NotebookTextIcon className="h-5 w-5" />
-            </div>
-            <span className="text-2xl">Mill Diary</span>
-          </Link>
+          <Logo size="lg" showTagline />
         </div>
         <CardTitle className="text-2xl font-bold tracking-tight">
           Create an account

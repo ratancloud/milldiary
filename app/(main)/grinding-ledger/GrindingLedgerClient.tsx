@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import GrindingLedgerStats from "@/components/grindingLedger/GrindingLedgerStats";
+import { PageHeader } from "@/components/layout/PageHeader";
 import GrindingLedgerTable from "@/components/grindingLedger/GrindingLedgerTable";
 import GrindingLedgerCreateModal from "@/components/grindingLedger/GrindingLedgerCreateModal";
 import DayScroller from "@/components/grindingLedger/DayScroller";
@@ -158,29 +159,32 @@ export default function GrindingLedgerClient() {
 
   return (
     <div className="container max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-4 md:space-y-6">
-      {/* Page Top Header Bar */}
-      <div className="flex items-center justify-between">
-        <h1 className="rounded-md border bg-muted px-3 py-1 text-xl font-bold">
-          Ledger
-        </h1>
-        <div className="flex items-center gap-2.5 w-fit sm:w-auto">
-          <Button
-            onClick={handleExport}
-            variant="outline"
-            className="gap-1.5 font-semibold text-xs sm:text-sm h-10 px-3.5 rounded-xl border-border/80"
-            title="Export Excel"
-          >
-            <DownloadIcon className="w-4 h-4 shrink-0" /> Export
-          </Button>
+      {/* Page Breadcrumb & Header */}
+      <PageHeader
+        items={[
+          { label: "Grinding Ledger" },
+        ]}
+        actions={
+          <>
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-3.5 rounded-xl border-border/80 hover:bg-secondary active:scale-[0.98] transition-all"
+              title="Export Excel"
+            >
+              <DownloadIcon className="w-4 h-4 shrink-0" />
+            </Button>
 
-          <Button
-            type="button"
-            onClick={() => router.push("/grinding-ledger/new")}
-          >
-            <Plus className="w-4 h-4 shrink-0" />Add
-          </Button>
-        </div>
-      </div>
+            <Button
+              type="button"
+              onClick={() => router.push("/grinding-ledger/new")}
+              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_2px_12px_rgba(166,83,46,0.28)] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 shrink-0 stroke-[2.5]" />
+            </Button>
+          </>
+        }
+      />
 
       {/* Compact Collapsible Daily Stat Card */}
       <GrindingLedgerStats stats={stats} isLoading={loading || isSessionPending} />

@@ -23,6 +23,7 @@ import {
 import { formateIndDate, formatRs } from "@/lib/helper";
 import { Section } from "@/components/millDataForm/Section";
 import { NumberInput } from "@/components/millDataForm/NumberInput";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { KgRs } from "@/components/millDataForm/KgRs";
 import { TextareaBlock } from "@/components/millDataForm/TextareaBlock";
 import { ReadOnly } from "@/components/millDataForm/ReadOnly";
@@ -168,45 +169,48 @@ export default function CreateMillDataClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold rounded-md border bg-muted px-3 py-1">
-          New Entry
-        </h1>
+      {/* Page Breadcrumb & Header */}
+      <PageHeader
+        backHref="/mill-data"
+        items={[
+          { label: "Mill Data", href: "/mill-data" },
+          { label: "New Entry" },
+        ]}
+        actions={
+          <Popover open={open} onOpenChange={() => setOpen(!open)}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="h-9 sm:h-10 inline-flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 px-3 sm:px-3.5 text-xs font-semibold transition-all focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer shadow-xs active:scale-[0.98]"
+              >
+                <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                <span className="font-mono">{displayDate}</span>
+              </button>
+            </PopoverTrigger>
 
-        <Popover open={open} onOpenChange={() => setOpen(!open)}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm font-medium transition-colors hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <CalendarIcon className="h-4 w-4 text-primary" />
-              <span>{displayDate}</span>
-            </button>
-          </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto overflow-hidden p-0">
+              <Calendar
+                mode="single"
+                selected={
+                  watchedDate ? new Date(`${watchedDate}T00:00:00`) : undefined
+                }
+                onSelect={(date) => {
+                  if (!date) return;
 
-          <PopoverContent align="end" className="w-auto overflow-hidden p-0">
-            <Calendar
-              mode="single"
-              selected={
-                watchedDate ? new Date(`${watchedDate}T00:00:00`) : undefined
-              }
-              onSelect={(date) => {
-                if (!date) return;
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, "0");
+                  const day = String(date.getDate()).padStart(2, "0");
 
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, "0");
-                const day = String(date.getDate()).padStart(2, "0");
+                  const istDate = `${year}-${month}-${day}`;
 
-                const istDate = `${year}-${month}-${day}`;
-
-                setValue("date", istDate, { shouldDirty: true });
-                setOpen(false);
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+                  setValue("date", istDate, { shouldDirty: true });
+                  setOpen(false);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        }
+      />
 
       <Card>
         <CardContent className="space-y-10 pt-6">

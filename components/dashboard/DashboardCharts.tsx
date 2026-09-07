@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import {
   Bar,
   CartesianGrid,
@@ -27,6 +28,10 @@ import {
   Sprout,
   Users,
   Home,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  Sparkles,
 } from "lucide-react";
 import {
   Card,
@@ -35,6 +40,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   MonthlyHomeDebit,
@@ -51,17 +57,17 @@ interface DashboardChartsProps {
 }
 
 const CHART_COLORS = {
-  flour: "#3b82f6", // blue-500
-  oil: "#f59e0b", // amber-500
-  khari: "#8b5cf6", // violet-500
-  millCr: "#10b981", // emerald-500
-  wheat: "#d97706", // amber-600
-  mustard: "#eab308", // yellow-500
-  bhim: "#ec4899", // pink-500
-  viswa: "#be185d", // rose-700
-  millDr: "#64748b", // slate-500
-  incomeLine: "#2563eb", // blue-600
-  lossBar: "#ef4444", // red-500
+  flour: "#357899", // mineral slate blue
+  oil: "#e09b43", // warm amber
+  khari: "#a6532e", // copper accent
+  millCr: "#22a06b", // sage green
+  wheat: "#c9822b", // warm bronze
+  mustard: "#d4973b", // mustard gold
+  bhim: "#9e5238", // warm rust
+  viswa: "#6e473b", // deep terracotta
+  millDr: "#766d66", // mineral slate
+  incomeLine: "#a6532e", // copper primary
+  lossBar: "#c94040", // copper slate danger
 } as const;
 
 const AXIS_STYLE = {
@@ -76,8 +82,8 @@ const OverviewTooltip = ({
 }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-popover/95 px-4 py-3 text-sm shadow-xl backdrop-blur-sm animate-in fade-in-0 zoom-in-95 min-w-50">
-        <p className="mb-2 font-semibold text-foreground border-b border-border/50 pb-2">
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-3 text-xs shadow-2xl animate-in fade-in-0 zoom-in-95 min-w-56">
+        <p className="font-bold text-foreground border-b border-border/50 pb-2 mb-2">
           {label}
         </p>
         <div className="flex flex-col gap-2">
@@ -88,7 +94,7 @@ const OverviewTooltip = ({
             >
               <div className="flex items-center gap-2">
                 <div
-                  className="h-2.5 w-2.5 rounded-full ring-2 ring-background"
+                  className="h-2.5 w-2.5 rounded-full ring-2 ring-background shrink-0"
                   style={{ backgroundColor: entry.color }}
                 />
                 <span className="text-muted-foreground capitalize font-medium">
@@ -112,6 +118,27 @@ export const DashboardCharts = ({
   debitMillData,
   debitHomeData,
 }: DashboardChartsProps) => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+
+  const dynamicColors = useMemo(() => ({
+    millCr: isDark ? "#34c785" : CHART_COLORS.millCr,
+    lossBar: isDark ? "#e55a5a" : CHART_COLORS.lossBar,
+    incomeLine: isDark ? "#d6875f" : CHART_COLORS.incomeLine,
+  }), [isDark]);
+
+  const axisTickStyle = useMemo(() => ({
+    fontSize: 10,
+    fontWeight: 500,
+    fill: isDark ? "#a19e99" : "#6a625b",
+  }), [isDark]);
+
   const overviewData = useMemo(() => {
     return creditData.map((creditItem) => {
       const debitItem = debitMillData.find((d) => d.month === creditItem.month);
@@ -129,22 +156,50 @@ export const DashboardCharts = ({
     });
   }, [creditData, debitMillData]);
 
+  // Peak month highlight
+  const peakMonth = useMemo(() => {
+    if (!overviewData.length) return null;
+    return [...overviewData].sort((a, b) => b.Income - a.Income)[0];
+  }, [overviewData]);
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* --- Chart 1: Overview --- */}
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Financial Overview</CardTitle>
-          <CardDescription>Credit vs Debit with Income</CardDescription>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
+      {/* --- Chart 1: Financial Trajectory Overview --- */}
+      <Card className="rounded-2xl border border-border/70 dark:border-white/[0.08] bg-card shadow-[var(--card-shadow)] overflow-hidden">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 sm:p-6 pb-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                Financial Trajectory Overview
+              </CardTitle>
+              <Badge variant="accent" className="text-[10px] font-semibold">
+                Cashflow vs Expenditure
+              </Badge>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground">
+              Comparative view of monthly credit inflows, operating mill debits, and net retained income
+            </CardDescription>
+          </div>
+
+          {peakMonth && peakMonth.Income > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/70 dark:border-white/10 bg-secondary/50 text-xs shrink-0 font-medium">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-muted-foreground">Best Month:</span>
+              <span className="font-bold text-foreground">{peakMonth.month}</span>
+              <span className="font-mono font-bold text-primary">({formatRs(peakMonth.Income)})</span>
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="h-75 sm:h-100 w-full">
+
+        <CardContent className="p-4 sm:p-6 pt-5">
+          <div className="h-72 sm:h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={overviewData}
-                margin={{ top: 20, right: 0, bottom: 0, left: 0 }}
+                margin={{ top: 15, right: 10, bottom: 0, left: 2 }}
               >
                 <defs>
+                  {/* Subtle Sage Gradient for Credit Area */}
                   <linearGradient
                     id="creditGradient"
                     x1="0"
@@ -154,29 +209,41 @@ export const DashboardCharts = ({
                   >
                     <stop
                       offset="5%"
-                      stopColor={CHART_COLORS.millCr}
-                      stopOpacity={0.2}
+                      stopColor={dynamicColors.millCr}
+                      stopOpacity={isDark ? 0.32 : 0.22}
                     />
                     <stop
                       offset="95%"
-                      stopColor={CHART_COLORS.millCr}
+                      stopColor={dynamicColors.millCr}
                       stopOpacity={0}
                     />
+                  </linearGradient>
+
+                  {/* Copper Sheen for Income Line */}
+                  <linearGradient
+                    id="incomeGradient"
+                    x1="0"
+                    y1="0"
+                    x2="100%"
+                    y2="0"
+                  >
+                    <stop offset="0%" stopColor={isDark ? "#f0a27a" : "#c26338"} />
+                    <stop offset="50%" stopColor={dynamicColors.incomeLine} />
+                    <stop offset="100%" stopColor={isDark ? "#d6875f" : "#873e1c"} />
                   </linearGradient>
                 </defs>
 
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="hsl(var(--border))"
-                  strokeOpacity={0.5}
+                  stroke={isDark ? "rgba(255, 255, 255, 0.07)" : "rgba(39, 35, 32, 0.08)"}
                 />
 
                 <XAxis
                   dataKey="month"
-                  axisLine={false}
+                  axisLine={{ stroke: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(39, 35, 32, 0.1)" }}
                   tickLine={false}
-                  tick={AXIS_STYLE}
+                  tick={axisTickStyle}
                   dy={10}
                   interval="preserveStartEnd"
                 />
@@ -184,17 +251,18 @@ export const DashboardCharts = ({
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={AXIS_STYLE}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
-                  width={40}
+                  tickMargin={4}
+                  textAnchor="end"
+                  tick={axisTickStyle}
+                  tickFormatter={(val) => val >= 100000 ? `₹${(val / 100000).toFixed(1)}L` : val >= 1000 ? `₹${Math.round(val / 1000)}k` : `₹${val}`}
+                  width={52}
                 />
 
                 <Tooltip
                   content={<OverviewTooltip />}
-                  cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
+                  cursor={{ fill: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(39, 35, 32, 0.04)", rx: 6, ry: 6 }}
                 />
 
-                {/* Fixed: Added color to Legend wrapperStyle for dark mode visibility */}
                 <Legend
                   wrapperStyle={{
                     paddingTop: "20px",
@@ -207,30 +275,33 @@ export const DashboardCharts = ({
                 <Area
                   type="monotone"
                   dataKey="Credit"
+                  name="Gross Credit"
                   fill="url(#creditGradient)"
-                  stroke={CHART_COLORS.millCr}
+                  stroke={dynamicColors.millCr}
                   strokeWidth={2}
                   activeDot={{ r: 4, strokeWidth: 0 }}
                 />
 
                 <Bar
                   dataKey="MillDr"
-                  fill={CHART_COLORS.lossBar}
-                  radius={[4, 4, 0, 0]}
+                  name="Mill Debit"
+                  fill={dynamicColors.lossBar}
+                  radius={[5, 5, 0, 0]}
                   barSize={20}
-                  fillOpacity={0.9}
+                  fillOpacity={isDark ? 0.94 : 0.88}
                 />
 
                 <Line
                   type="monotone"
                   dataKey="Income"
-                  stroke={CHART_COLORS.incomeLine}
+                  name="Net Operating Income"
+                  stroke={dynamicColors.incomeLine}
                   strokeWidth={3}
                   dot={{
                     r: 4,
-                    fill: CHART_COLORS.incomeLine,
+                    fill: dynamicColors.incomeLine,
                     strokeWidth: 2,
-                    stroke: "hsl(var(--background))", // Adaptive stroke for dots
+                    stroke: "hsl(var(--background))",
                   }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
@@ -240,23 +311,41 @@ export const DashboardCharts = ({
         </CardContent>
       </Card>
 
-      {/* --- Breakdown Tabs --- */}
-      <Tabs defaultValue="income" className="w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            Detailed Breakdown
-          </h2>
-          <TabsList className="grid w-full sm:w-100 grid-cols-2">
-            <TabsTrigger value="income">Income Streams</TabsTrigger>
-            <TabsTrigger value="expense">Expense Streams</TabsTrigger>
+      {/* --- Section 2: Detailed Commodity Breakdown Tabs --- */}
+      <Tabs defaultValue="income" className="w-full space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+              Commodity & Operational Breakdown
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Granular inspection of individual milling revenue channels and processing expenditures
+            </p>
+          </div>
+
+          <TabsList className="grid w-full sm:w-80 grid-cols-2 p-1 rounded-xl bg-secondary/60 border border-border/70">
+            <TabsTrigger
+              value="income"
+              className="gap-1.5 rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs transition-all cursor-pointer"
+            >
+              <ArrowUpRight className="h-3.5 w-3.5" />
+              <span>Income Streams</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="expense"
+              className="gap-1.5 rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs transition-all cursor-pointer"
+            >
+              <ArrowDownRight className="h-3.5 w-3.5" />
+              <span>Expense Streams</span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
         {/* --- INCOME TAB --- */}
-        <TabsContent value="income" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <TabsContent value="income" className="mt-0 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <MetricChartCard
-              title="Flour Revenue"
+              title="Flour Revenue (Atta)"
               icon={Wheat}
               data={creditData}
               dataKey="flourRs"
@@ -264,7 +353,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Oil Revenue"
+              title="Mustard Oil Revenue"
               icon={Droplets}
               data={creditData}
               dataKey="oilRs"
@@ -272,7 +361,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Khari Revenue"
+              title="Khari / Cake Revenue"
               icon={Package}
               data={creditData}
               dataKey="khariRs"
@@ -290,10 +379,10 @@ export const DashboardCharts = ({
         </TabsContent>
 
         {/* --- EXPENSE TAB --- */}
-        <TabsContent value="expense" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <TabsContent value="expense" className="mt-0 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <MetricChartCard
-              title="Wheat Purchase"
+              title="Wheat Purchase (Gehum)"
               icon={ShoppingBasket}
               data={debitMillData}
               dataKey="gehumRs"
@@ -301,7 +390,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Mustard Purchase"
+              title="Mustard Seed Purchase (Sarso)"
               icon={Sprout}
               data={debitMillData}
               dataKey="sarsoRs"
@@ -317,7 +406,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Bhim (Staff)"
+              title="Bhim (Operator Staff)"
               icon={Users}
               data={debitMillData}
               dataKey="staff1Cost"
@@ -325,7 +414,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Viswa (Staff)"
+              title="Viswa (Operator Staff)"
               icon={Users}
               data={debitMillData}
               dataKey="staff2Cost"
@@ -333,7 +422,7 @@ export const DashboardCharts = ({
             />
 
             <MetricChartCard
-              title="Home Debit"
+              title="Household Drawings (Home Debit)"
               icon={Home}
               data={debitHomeData}
               dataKey="homeDebit"

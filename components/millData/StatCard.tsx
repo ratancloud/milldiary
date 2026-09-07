@@ -41,10 +41,10 @@ const CARD_VARIANTS: Record<
     value: "text-sky-700 dark:text-sky-400",
   },
   purple: {
-    headerBg: "bg-violet-500/[0.06] dark:bg-violet-500/10 border-violet-500/20",
-    iconBg: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/25 shadow-2xs",
-    title: "text-foreground dark:text-violet-100",
-    value: "text-violet-700 dark:text-violet-400",
+    headerBg: "bg-primary/[0.08] dark:bg-primary/15 border-primary/20",
+    iconBg: "bg-primary/15 text-primary dark:text-primary border-primary/25 shadow-2xs",
+    title: "text-foreground dark:text-foreground",
+    value: "text-primary dark:text-primary",
   },
   amber: {
     headerBg: "bg-amber-500/[0.06] dark:bg-amber-500/10 border-amber-500/20",
@@ -102,26 +102,26 @@ const StatCard = ({
   const displayHeader = rawDisplay;
 
   return (
-    <div className="rounded-xl border border-border/80 dark:border-border/60 bg-card text-card-foreground shadow-xs overflow-hidden transition-all duration-200 hover:border-border hover:shadow-sm flex flex-col justify-between">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-md text-card-foreground shadow-[var(--card-shadow)] hover:shadow-[var(--card-hover-shadow)] hover:border-border/90 overflow-hidden transition-all duration-200 flex flex-col justify-between group">
       {/* Header */}
       <div
         className={cn(
-          "px-4 py-3 sm:px-5 sm:py-3.5 border-b flex items-center justify-between min-h-[56px] gap-3",
+          "px-4 py-3.5 sm:px-5 sm:py-4 border-b flex items-center justify-between min-h-[60px] gap-3",
           headerClassName || styles.headerBg
         )}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div
             className={cn(
-              "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border",
+              "h-9 w-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105",
               styles.iconBg
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4.5 w-4.5" />
           </div>
           <h3
             className={cn(
-              "font-semibold text-sm sm:text-base tracking-tight truncate",
+              "font-bold text-sm sm:text-base tracking-tight truncate",
               titleClassName || styles.title
             )}
           >
@@ -131,12 +131,12 @@ const StatCard = ({
 
         <div
           className={cn(
-            "text-lg sm:text-xl font-bold font-mono tabular-nums flex items-baseline gap-1 shrink-0 tracking-tight",
+            "text-xl sm:text-2xl font-black font-mono tabular-nums flex items-baseline gap-1 shrink-0 tracking-tight",
             headerValueClassName || styles.value
           )}
         >
           {isLoading ? (
-            <Skeleton className="h-6 w-24 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-lg" />
           ) : (
             <>
               <span className="text-xs sm:text-sm font-sans font-medium opacity-65">₹</span>
@@ -147,11 +147,11 @@ const StatCard = ({
       </div>
 
       {/* Content */}
-      <div className="p-3.5 sm:p-4">
+      <div className="p-4 sm:p-5">
         {isLoading ? (
           <div className={gridClassName}>
             {Array.from({ length: skeletonCount }).map((_, i) => (
-              <Skeleton key={i} className="h-[64px] w-full rounded-lg" />
+              <Skeleton key={i} className="h-[68px] w-full rounded-xl" />
             ))}
           </div>
         ) : (

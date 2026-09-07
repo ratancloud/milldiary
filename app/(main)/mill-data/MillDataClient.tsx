@@ -18,7 +18,9 @@ import {
   EyeOff,
   Calendar,
   DownloadIcon,
+  Plus,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -37,6 +39,7 @@ import MillDataPageSkeleton from "@/components/skelton/MillDataPageSkeleton";
 import SummaryCards from "@/components/millData/SummaryCards";
 import TableComponent from "@/components/millData/TableComponent";
 import { handleExportToExcel } from "@/lib/handleExportToExcel";
+import { cn } from "@/lib/utils";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: String(i + 1),
@@ -167,37 +170,32 @@ function MillDataContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold rounded-md border bg-muted px-3 py-1">
-          Monthly Data
-        </h1>
-        <div className="flex items-center gap-2">
-          <div
-            onClick={() => toast.error("Date is view only")}
-            className="flex items-center justify-center gap-2 rounded-md border bg-muted hover:bg-primary/20 px-3 py-2 text-sm font-medium transition-colors"
-          >
-            <Calendar className="h-4 w-4 text-primary" />
-            <span className="tabular-nums">
-              {formateIndDate(new Date(`${year}-${month}-01`)).slice(2)}
-            </span>
-          </div>
-
+      {/* Page Breadcrumb & Header */}
+      <PageHeader
+        items={[
+          { label: "Mill Data", href: "/mill-data" },
+          { label: `${formateIndDate(new Date(`${year}-${month}-01`)).slice(2)}` }
+        ]}
+        actions={
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setIsSensitive((prev) => !prev)}
-            title={isSensitive ? "Show values" : "Hide values"}
-            className="bg-muted hover:bg-primary/20"
+            onClick={() => setIsSensitive((v) => !v)}
+            title={isSensitive ? "Show monetary values" : "Mask sensitive values"}
+            className={cn(
+              "h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 transition-all active:scale-95 shrink-0",
+              isSensitive && "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+            )}
+            aria-label={isSensitive ? "Show monetary values" : "Mask sensitive values"}
           >
             {isSensitive ? (
-              <Eye className="h-4 w-4 text-primary" />
+              <EyeOff className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             ) : (
-              <EyeOff className="h-4 w-4 text-primary" />
+              <Eye className="h-4 w-4 text-primary" />
             )}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary Cards Grid */}
       <SummaryCards

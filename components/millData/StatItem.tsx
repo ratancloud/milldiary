@@ -49,12 +49,12 @@ const ITEM_VARIANTS: Record<
     icon: "text-sky-600/70 group-hover:text-sky-700 dark:text-sky-400/80 dark:group-hover:text-sky-300",
   },
   purple: {
-    bg: "bg-violet-500/[0.04] hover:bg-violet-500/[0.08] dark:bg-violet-500/[0.06] dark:hover:bg-violet-500/[0.12] border-violet-500/15 dark:border-violet-500/25",
-    label: "text-violet-700/80 dark:text-violet-300/80",
-    color: "text-foreground dark:text-violet-50",
-    currency: "text-violet-600/70 dark:text-violet-400/70",
-    badge: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20",
-    icon: "text-violet-600/70 group-hover:text-violet-700 dark:text-violet-400/80 dark:group-hover:text-violet-300",
+    bg: "bg-primary/[0.06] hover:bg-primary/[0.10] dark:bg-primary/[0.08] dark:hover:bg-primary/[0.14] border-primary/20 dark:border-primary/30",
+    label: "text-primary/90 dark:text-primary",
+    color: "text-foreground",
+    currency: "text-primary/80 dark:text-primary/90",
+    badge: "bg-primary/10 text-primary border-primary/25",
+    icon: "text-primary group-hover:text-primary/90",
   },
   amber: {
     bg: "bg-amber-500/[0.04] hover:bg-amber-500/[0.08] dark:bg-amber-500/[0.06] dark:hover:bg-amber-500/[0.12] border-amber-500/15 dark:border-amber-500/25",
@@ -115,7 +115,7 @@ const StatItem = ({
   return (
     <div
       className={cn(
-        "group flex flex-col justify-between p-2.5 sm:p-3 rounded-lg border transition-all duration-150 min-h-[64px]",
+        "group flex flex-col justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-150 min-h-[66px] shadow-2xs",
         bg
       )}
     >
@@ -162,7 +162,7 @@ const StatItem = ({
           </span>
           <span
             className={cn(
-              "text-base sm:text-lg font-bold font-mono tabular-nums tracking-tight truncate",
+              "text-base sm:text-lg font-bold font-mono tabular-nums tracking-tight",
               valColor
             )}
           >

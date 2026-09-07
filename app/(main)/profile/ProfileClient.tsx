@@ -14,6 +14,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import ProfileHeroCard from "@/components/profile/ProfileHeroCard";
 import ActiveSessionsCard from "@/components/profile/ActiveSessionsCard";
 import ProfilePageSkeleton from "@/components/skelton/ProfilePageSkeleton";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function ProfileClient() {
   const router = useRouter();
@@ -83,12 +84,12 @@ export default function ProfileClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold rounded-md border bg-muted px-3 py-1">
-          Profile
-        </h1>
-      </div>
+      {/* Page Breadcrumb & Header */}
+      <PageHeader
+        items={[
+          { label: "Profile" },
+        ]}
+      />
 
       {/* Profile Card */}
       <ProfileHeroCard

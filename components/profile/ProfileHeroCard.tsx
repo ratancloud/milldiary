@@ -27,15 +27,16 @@ export default function ProfileHeroCard({
   return (
     <Card className="relative mx-auto max-w-7xl overflow-visible rounded-2xl border shadow-sm pt-0">
       {/* Header */}
-      <div className="relative h-36 sm:h-44 rounded-2xl bg-linear-to-tr from-primary via-indigo-500 to-purple-600">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_60%)]" />
-        <div className="absolute -bottom-10 left-0 right-0 h-20 bg-background rounded-t-[55%]" />
+      <div className="relative h-36 sm:h-44 rounded-2xl bg-linear-to-tr from-primary via-primary/80 to-secondary overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_65%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.08)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[24px_24px] opacity-30" />
+        <div className="absolute -bottom-10 left-0 right-0 h-20 bg-card rounded-t-[55%]" />
       </div>
 
       {/* Avatar */}
       <div className="relative z-10 flex justify-center -mt-20 sm:-mt-24">
-        <div className="rounded-full p-1 bg-linear-to-tr from-primary via-indigo-500 to-purple-600 shadow-xl">
-          <Avatar className="h-32 w-32 sm:h-36 sm:w-36 border-4 border-background bg-background">
+        <div className="rounded-full p-1 bg-linear-to-tr from-primary via-primary/70 to-card shadow-xl">
+          <Avatar className="h-32 w-32 sm:h-36 sm:w-36 border-4 border-card bg-card shadow-sm">
             <AvatarImage src={image ?? undefined} alt={name} />
             <AvatarFallback className="flex items-center justify-center text-3xl font-semibold text-primary">
               {name.charAt(0).toUpperCase()}

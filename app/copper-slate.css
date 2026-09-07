@@ -1,0 +1,238 @@
+/**
+ * ==============================================================================
+ * COPPER SLATE DESIGN SYSTEM — SINGLE SOURCE OF TRUTH (TOKENS)
+ * ==============================================================================
+ * 
+ * HOW TO TWEAK THIS SYSTEM:
+ * - To change the accent color: Edit --cs-accent, --cs-accent-hover, and --cs-accent-soft below.
+ * - To adjust surface tones: Edit --cs-canvas, --cs-surface, and --cs-surface-strong.
+ * - To adjust corner radii: Change --radius (default: 0.5rem / 8px).
+ * - To adjust shadows: Tweak --card-shadow and --card-hover-shadow layers.
+ * ==============================================================================
+ */
+
+:root {
+  /* --- 1. Surfaces & Shell (Light Mode) --- */
+  --cs-app-shell: #e8e5e1;
+  --cs-canvas: #f1eeea;
+  --cs-main-surface: #faf8f5;
+  --cs-header: #f3f0ec;
+
+  --cs-surface: #fffefd;
+  --cs-surface-strong: #eee9e4;
+  --cs-surface-soft: #f8f5f1;
+  --cs-surface-hover: #ece5de;
+
+  /* --- 2. Interactive & States --- */
+  --cs-hover: #e7e1da;
+  --cs-selected: #f1ddd1;
+  --cs-track: #dfd9d2;
+  --cs-progress-track: #c5bdb5;
+
+  /* --- 3. Hairline Borders (Subtle mineral bounds for high contrast) --- */
+  --cs-border: rgba(39, 35, 32, 0.09);
+  --cs-border-strong: rgba(39, 35, 32, 0.16);
+
+  /* --- 4. Typography & Text Hierarchy --- */
+  --cs-text: #272320;
+  --cs-text-secondary: #514a45;
+  --cs-muted: #766d66;
+
+  /* --- 5. Accent (Warm Copper) --- */
+  --cs-accent: #a6532e;
+  --cs-accent-hover: #914525;
+  --cs-accent-soft: rgba(166, 83, 46, 0.10);
+  --cs-accent-border: rgba(166, 83, 46, 0.28);
+  --cs-accent-shadow: rgba(125, 58, 28, 0.17);
+
+  --cs-on-accent: #ffffff;
+  --cs-on-accent-glyph: #ffffff;
+  --cs-accent-ink: #914525;
+
+  /* --- 6. Status Colors --- */
+  --cs-success: #22a06b;
+  --cs-danger: #c94040;
+  --cs-warning: #c9822b;
+  --cs-info: #357899;
+
+  /* --- 7. Chart Palette (Harmonized with Copper Slate) --- */
+  --chart-1: #a6532e; /* Copper */
+  --chart-2: #357899; /* Slate Blue */
+  --chart-3: #22a06b; /* Sage Emerald */
+  --chart-4: #c9822b; /* Warm Bronze */
+  --chart-5: #514a45; /* Deep Mineral */
+
+  /* --- 8. Multi-Layer Shadows (Light Mode: Ambient + Ground Contact) --- */
+  --card-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 1px 0 0 rgba(255, 255, 255, 0.68),
+    0 1px 3px color-mix(in srgb, var(--cs-text) 18%, transparent),
+    0 6px 16px color-mix(in srgb, var(--cs-text) 12%, transparent),
+    0 18px 36px color-mix(in srgb, var(--cs-text) 8%, transparent);
+
+  --card-hover-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 6px color-mix(in srgb, var(--cs-text) 20%, transparent),
+    0 10px 22px color-mix(in srgb, var(--cs-text) 15%, transparent),
+    0 24px 44px color-mix(in srgb, var(--cs-text) 10%, transparent);
+
+  --card-selected-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 0 0 1px color-mix(in srgb, var(--cs-accent) 30%, transparent),
+    0 2px 5px color-mix(in srgb, var(--cs-text) 20%, transparent),
+    0 11px 24px color-mix(in srgb, var(--cs-text) 15%, transparent);
+
+  /* --- 9. Radii System --- */
+  --radius: 0.5rem; /* 8px base */
+  --control-radius: 8px;
+  --control-radius-action: 8px;
+  --control-radius-structured: 8px;
+  --control-radius-menu: 8px;
+
+  /* --- 10. Motion & Animation Curves --- */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 140ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  /* --- 11. Framework / Shadcn Token Bridge (Light) --- */
+  --background: var(--cs-canvas);
+  --foreground: var(--cs-text);
+  --card: var(--cs-surface);
+  --card-foreground: var(--cs-text);
+  --popover: var(--cs-surface-strong);
+  --popover-foreground: var(--cs-text);
+  --primary: var(--cs-accent);
+  --primary-foreground: var(--cs-on-accent);
+  --secondary: var(--cs-surface-strong);
+  --secondary-foreground: var(--cs-text-secondary);
+  --muted: var(--cs-surface-soft);
+  --muted-foreground: var(--cs-muted);
+  --accent: var(--cs-surface-hover);
+  --accent-foreground: var(--cs-accent-ink);
+  --destructive: var(--cs-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--cs-border);
+  --input: var(--cs-border);
+  --ring: var(--cs-accent);
+
+  /* Sidebar Tokens */
+  --sidebar: var(--cs-surface-strong);
+  --sidebar-foreground: var(--cs-text);
+  --sidebar-primary: var(--cs-accent);
+  --sidebar-primary-foreground: var(--cs-on-accent);
+  --sidebar-accent: var(--cs-surface-hover);
+  --sidebar-accent-foreground: var(--cs-accent-ink);
+  --sidebar-border: var(--cs-border);
+  --sidebar-ring: var(--cs-accent);
+}
+
+/* ==============================================================================
+ * DARK THEME TOKENS
+ * ============================================================================== */
+:root[data-theme="dark"],
+.dark {
+  /* --- 1. Surfaces & Shell (Dark Mode) --- */
+  --cs-app-shell: #141516;
+  --cs-canvas: #191a1b;
+  --cs-main-surface: #232526;
+  --cs-header: #1a1b1c;
+
+  --cs-surface: #2c2e2f;
+  --cs-surface-strong: #363839;
+  --cs-surface-soft: #202223;
+  --cs-surface-hover: #3a3937;
+
+  /* --- 2. Interactive & States --- */
+  --cs-hover: #3c3e3f;
+  --cs-selected: #49382f;
+  --cs-track: #222425;
+  --cs-progress-track: #484b4c;
+
+  /* --- 3. Hairline Borders --- */
+  --cs-border: rgba(255, 255, 255, 0.08);
+  --cs-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* --- 4. Typography & Text Hierarchy --- */
+  --cs-text: #f8f7f5;
+  --cs-text-secondary: #d8d5d1;
+  --cs-muted: #9e9994;
+
+  /* --- 5. Accent (Warm Copper) --- */
+  --cs-accent: #d6875f;
+  --cs-accent-hover: #e49a74;
+  --cs-accent-soft: rgba(214, 135, 95, 0.14);
+  --cs-accent-border: rgba(214, 135, 95, 0.38);
+  --cs-accent-shadow: rgba(162, 83, 47, 0.25);
+
+  --cs-on-accent: #26150d;
+  --cs-on-accent-glyph: #26150d;
+  --cs-accent-ink: #f0a27a;
+
+  /* --- 6. Status Colors --- */
+  --cs-success: #34c785;
+  --cs-danger: #e05252;
+  --cs-warning: #e09b43;
+  --cs-info: #4ea8d1;
+
+  /* --- 7. Chart Palette (Dark Mode) --- */
+  --chart-1: #d6875f; /* Warm Copper */
+  --chart-2: #4ea8d1; /* Slate Sky */
+  --chart-3: #34c785; /* Mint Green */
+  --chart-4: #e09b43; /* Amber */
+  --chart-5: #d8d5d1; /* Mineral Slate */
+
+  /* --- 8. Multi-Layer Shadows (Dark Mode: Deep Ambient Occlusion) --- */
+  --card-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 12px 28px rgba(0, 0, 0, 0.50),
+    0 26px 52px rgba(0, 0, 0, 0.28);
+
+  --card-hover-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+    0 3px 8px rgba(0, 0, 0, 0.52),
+    0 16px 36px rgba(0, 0, 0, 0.58),
+    0 32px 64px rgba(0, 0, 0, 0.32);
+
+  --card-selected-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 0 0 1px color-mix(in srgb, var(--cs-accent) 40%, transparent),
+    0 3px 8px rgba(0, 0, 0, 0.55),
+    0 16px 36px rgba(0, 0, 0, 0.55);
+
+  /* --- 11. Framework / Shadcn Token Bridge (Dark) --- */
+  --background: var(--cs-canvas);
+  --foreground: var(--cs-text);
+  --card: var(--cs-surface);
+  --card-foreground: var(--cs-text);
+  --popover: var(--cs-surface-strong);
+  --popover-foreground: var(--cs-text);
+  --primary: var(--cs-accent);
+  --primary-foreground: var(--cs-on-accent);
+  --secondary: var(--cs-surface-strong);
+  --secondary-foreground: var(--cs-text-secondary);
+  --muted: var(--cs-surface-soft);
+  --muted-foreground: var(--cs-muted);
+  --accent: var(--cs-surface-hover);
+  --accent-foreground: var(--cs-accent-ink);
+  --destructive: var(--cs-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--cs-border);
+  --input: var(--cs-border);
+  --ring: var(--cs-accent);
+
+  /* Sidebar Tokens */
+  --sidebar: var(--cs-surface-strong);
+  --sidebar-foreground: var(--cs-text);
+  --sidebar-primary: var(--cs-accent);
+  --sidebar-primary-foreground: var(--cs-on-accent);
+  --sidebar-accent: var(--cs-surface-hover);
+  --sidebar-accent-foreground: var(--cs-accent-ink);
+  --sidebar-border: var(--cs-border);
+  --sidebar-ring: var(--cs-accent);
+}

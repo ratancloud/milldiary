@@ -53,14 +53,14 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90"
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_2px_12px_rgba(166,83,46,0.28)] hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200"
               >
                 Start Using MillDiary
               </Link>
 
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-md bg-primary/20 border border-primary/20 px-7 py-3.5 text-sm font-medium"
+                className="inline-flex items-center justify-center rounded-lg bg-card border border-border/80 px-7 py-3.5 text-sm font-medium hover:bg-secondary transition-all duration-200 active:scale-[0.98] shadow-2xs"
               >
                 View Dashboard
               </Link>

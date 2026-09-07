@@ -27,6 +27,7 @@ import EditMillDataSkeleton from "@/components/skelton/EditMillDataSkeleton";
 import { MillData } from "@/types/mill-data";
 import { Section } from "@/components/millDataForm/Section";
 import { NumberInput } from "@/components/millDataForm/NumberInput";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { KgRs } from "@/components/millDataForm/KgRs";
 import { TextareaBlock } from "@/components/millDataForm/TextareaBlock";
 import { ReadOnly } from "@/components/millDataForm/ReadOnly";
@@ -178,23 +179,27 @@ export default function EditMillDataClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold rounded-md border bg-muted px-3 py-1">
-          Edit Entry
-        </h1>
-        {date && (
-          <div
-            className="flex items-center gap-2"
-            onClick={() => toast.error("Date cannot be changed")}
-          >
-            <div className="flex items-center justify-center gap-2 rounded-md border bg-muted hover:bg-primary/20 px-3 py-2 text-sm font-medium transition-colors">
-              <Calendar className="h-4 w-4 text-primary" />
-              <span className="tabular-nums">{formateIndDate(date)}</span>
+      {/* Page Breadcrumb & Header */}
+      <PageHeader
+        backHref="/mill-data"
+        items={[
+          { label: "Mill Data", href: "/mill-data" },
+          { label: "Edit Entry" },
+        ]}
+        actions={
+          date && (
+            <div
+              className="flex items-center gap-2"
+              onClick={() => toast.error("Date cannot be changed")}
+            >
+              <div className="h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 px-3 sm:px-3.5 text-xs font-semibold cursor-pointer transition-all shadow-xs">
+                <Calendar className="h-3.5 w-3.5 text-primary" />
+                <span className="tabular-nums font-mono">{formateIndDate(date)}</span>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )
+        }
+      />
 
       <Card>
         <CardContent className="space-y-10 pt-6">
