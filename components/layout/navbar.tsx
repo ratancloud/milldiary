@@ -89,16 +89,16 @@ export default function Navbar() {
   return (
     <header
       className={cn(
-        "top-0 z-50 w-full flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "top-0 z-50 w-full flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pt-[env(safe-area-inset-top)]",
         isHeroPage ? "fixed left-0 right-0" : "sticky",
         isScrolled
-          ? "border-b border-border/40 bg-background/85 dark:bg-[#141516]/85 backdrop-blur-md supports-backdrop-filter:bg-background/60 shadow-xs h-16"
+          ? "border-b border-border/40 bg-background/85 dark:bg-[#141516]/85 backdrop-blur-md supports-backdrop-filter:bg-background/60 shadow-xs"
           : isHeroPage
-            ? "border-b border-transparent bg-transparent shadow-none backdrop-blur-none h-16"
-            : "border-b border-border/40 bg-background/85 dark:bg-[#141516]/85 backdrop-blur-md supports-backdrop-filter:bg-background/60 shadow-xs h-16"
+            ? "border-b border-transparent bg-transparent shadow-none backdrop-blur-none"
+            : "border-b border-border/40 bg-background/85 dark:bg-[#141516]/85 backdrop-blur-md supports-backdrop-filter:bg-background/60 shadow-xs"
       )}
     >
-      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
 
         {/* --- LEFT: LOGO --- */}
         <div className="flex items-center gap-6">

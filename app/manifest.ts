@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/mill-data',
     scope: '/',
     display: 'standalone',
-    background_color: '#FFFFFF',
-    theme_color: '#eef2f7',
+    background_color: '#f1eeea',
+    theme_color: '#f1eeea',
     icons: [
       {
         src: '/icons/icon-192.png',

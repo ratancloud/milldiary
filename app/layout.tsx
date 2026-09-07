@@ -26,6 +26,14 @@ export const metadata: Metadata = {
   description: "Inventory and mill data management system",
   applicationName: "Mill Diary",
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Mill Diary",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 
@@ -33,6 +41,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
   interactiveWidget: "overlays-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f1eeea" },
