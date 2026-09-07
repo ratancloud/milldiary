@@ -79,7 +79,7 @@ export default function MobileBottomNav() {
   const isDashboardActive = pathname === "/dashboard";
   const isMillDataActive = pathname.startsWith("/mill-data");
   const isAddLedgerActive = pathname === "/grinding-ledger/new";
-  const isLedgerActive = pathname === "/grinding-ledger";
+  const isLedgerActive = pathname.startsWith("/grinding-ledger");
   const isProfileActive = pathname.startsWith("/profile");
   const isLoginActive = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
@@ -89,7 +89,7 @@ export default function MobileBottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border/80 bg-background/92 dark:bg-[#141516]/95 backdrop-blur-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.45)] pb-[env(safe-area-inset-bottom)]"
     >
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
-        
+
         {/* Tab 1: Dashboard */}
         <Link
           href="/dashboard"

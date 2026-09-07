@@ -35,6 +35,7 @@ interface MetricChartCardProps<T extends ChartDataPoint> {
   dataKey: keyof T & string;
   color: string;
   unit?: string;
+  isSensitive?: boolean;
 }
 
 const WEIGHT_MAP: Partial<
@@ -72,6 +73,7 @@ export const MetricChartCard = <T extends ChartDataPoint>({
   dataKey,
   color,
   unit = "₹",
+  isSensitive = false,
 }: MetricChartCardProps<T>) => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -154,15 +156,32 @@ export const MetricChartCard = <T extends ChartDataPoint>({
             )}
           </div>
 
-          <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-foreground">
-            {unit === "₹" ? formatRs(totalValue) : `${totalValue.toLocaleString("en-IN")} ${unit}`}
+          <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-foreground flex items-baseline gap-1">
+            {unit === "₹" && (
+              <span className="text-xs sm:text-sm font-sans font-medium opacity-65">₹</span>
+            )}
+            <span>
+              {isSensitive && unit === "₹"
+                ? "••••••"
+                : unit === "₹"
+                ? formatRs(totalValue)
+                : `${totalValue.toLocaleString("en-IN")} ${unit}`}
+            </span>
           </div>
 
           {/* Micro Telemetry Stat Line */}
           {hasData && (
             <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground font-medium flex-wrap pt-0.5">
               <span>
-                Avg: <strong className="font-mono text-foreground font-semibold">{unit === "₹" ? formatRs(avgMonthly) : `${avgMonthly} ${unit}`}</strong>/mo
+                Avg:{" "}
+                <strong className="font-mono text-foreground font-semibold">
+                  {unit === "₹"
+                    ? isSensitive
+                      ? "₹•••••"
+                      : `₹${formatRs(avgMonthly)}`
+                    : `${avgMonthly} ${unit}`}
+                </strong>
+                /mo
               </span>
               {peakMonth && peakMonth.value > 0 && (
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -242,6 +261,7 @@ export const MetricChartCard = <T extends ChartDataPoint>({
                     fontWeight: 500,
                   }}
                   tickFormatter={(value) => {
+                    if (isSensitive && unit === "₹") return "••••";
                     if (value >= 100000) return `${unit}${(value / 100000).toFixed(1)}L`;
                     if (value >= 1000) return `${unit}${Math.round(value / 1000)}k`;
                     return `${unit}${value}`;
@@ -254,6 +274,7 @@ export const MetricChartCard = <T extends ChartDataPoint>({
                       totalAnnualValue={totalValue}
                       unit={unit}
                       isDark={isDark}
+                      isSensitive={isSensitive}
                     />
                   }
                   cursor={{
@@ -282,6 +303,7 @@ interface BreakdownTooltipProps extends TooltipProps<ValueType, NameType> {
   totalAnnualValue: number;
   unit: string;
   isDark: boolean;
+  isSensitive?: boolean;
 }
 
 const BreakdownTooltip = ({
@@ -291,6 +313,7 @@ const BreakdownTooltip = ({
   totalAnnualValue,
   unit,
   isDark,
+  isSensitive = false,
 }: BreakdownTooltipProps) => {
   if (active && payload && payload.length) {
     const entry = payload[0];
@@ -308,7 +331,11 @@ const BreakdownTooltip = ({
         : "0";
 
     const formattedAmount =
-      unit === "₹" ? formatRs(valueNum) : `${valueNum.toLocaleString("en-IN")} ${unit}`;
+      unit === "₹"
+        ? isSensitive
+          ? "₹••••••"
+          : `₹${formatRs(valueNum)}`
+        : `${valueNum.toLocaleString("en-IN")} ${unit}`;
 
     return (
       <div className="rounded-xl border border-border/80 dark:border-white/15 bg-popover/95 dark:bg-[#1b1c1e]/95 backdrop-blur-md px-3.5 py-2.5 text-xs shadow-xl dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)] animate-in fade-in-0 zoom-in-95 min-w-[210px]">

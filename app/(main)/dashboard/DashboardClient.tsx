@@ -41,7 +41,7 @@ function DashboardContent() {
   const yearFromUrl = Number(searchParams.get("year")) || currentYear;
 
   const [year, setYear] = useState<number>(yearFromUrl);
-  const [isSensitive, setIsSensitive] = useState(false);
+  const [isSensitive, setIsSensitive] = useState(true);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] =
     useState<MillDashboardResponse | null>(null);
@@ -156,6 +156,7 @@ function DashboardContent() {
             creditData={dashboardData.monthlyCredit}
             debitMillData={dashboardData.monthlyMillDebit}
             debitHomeData={dashboardData.monthlyHomeDebit}
+            isSensitive={isSensitive}
           />
         ) : (
           <DashboardChartsSkeleton />

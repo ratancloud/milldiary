@@ -15,11 +15,9 @@ import {
   CalendarIcon,
   AlertTriangle,
   Edit,
-  ChevronDown,
-  Search,
-  X,
-  Languages,
   Camera,
+  Wheat,
+  Sprout,
 } from "lucide-react";
 import {
   Dialog,
@@ -80,6 +78,7 @@ interface GrindingLedgerOcrStudioProps {
   onSuccess: () => void;
   onCancel: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
+  modeSwitch?: React.ReactNode;
 }
 
 import { VillageAutocomplete } from "./VillageAutocomplete";
@@ -89,6 +88,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   onSuccess,
   onCancel,
   onDirtyChange,
+  modeSwitch,
 }) => {
   const [step, setStep] = useState<"upload" | "scanning" | "review">("upload");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -422,48 +422,64 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
   );
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 bg-gradient-to-r from-amber-600 to-yellow-500 bg-clip-text text-transparent">
-            <Sparkles className="h-5 w-5 text-amber-500 animate-pulse shrink-0" />
-            <span className="truncate">AI OCR Image-to-JSON Convertor</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Upload a handwritten register sheet. Gemini AI converts handwriting into editable rows for bulk database insertion.
-          </p>
+    <div className="rounded-2xl border border-border/80 dark:border-white/10 bg-card p-4 sm:p-6 shadow-[var(--card-shadow)] space-y-6">
+      {/* Card Header with Integrated Mode Switch */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 dark:border-white/10 pb-4">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/25 shrink-0">
+              <Sparkles className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate">
+                AI Vision OCR Studio
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Upload handwritten register sheets to extract editable records.
+              </p>
+            </div>
+          </div>
         </div>
-        {step === "review" && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAttemptReset}
-            className="text-xs font-semibold rounded-xl h-9 w-full sm:w-auto shrink-0"
-          >
-            ← Upload Another Sheet
-          </Button>
-        )}
+
+        {/* Right side controls: Upload Another Sheet & Mode Switch */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+          {step === "review" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAttemptReset}
+              className="text-xs font-semibold rounded-xl h-8 sm:h-9 px-3 w-full sm:w-auto shrink-0 border-border/80 hover:bg-secondary/60 cursor-pointer active:scale-[0.98]"
+            >
+              ← Another Sheet
+            </Button>
+          )}
+          {modeSwitch && <div className="w-full sm:w-auto shrink-0">{modeSwitch}</div>}
+        </div>
       </div>
 
       {/* ── Step 1: Upload ────────────────────────────────────────────────── */}
       {step === "upload" && (
-        <div className="py-6 flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto w-full">
+        <div className="py-4 sm:py-6 flex flex-col items-center justify-center space-y-6 max-w-2xl mx-auto w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
             <div className="space-y-1.5">
-              <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-                Slip Date
+              <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <CalendarIcon className="h-3 w-3 text-primary" />
+                <span>Slip Date</span>
               </Label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center justify-between w-full h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex items-center justify-between w-full h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary/50 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs cursor-pointer"
                   >
-                    <span>{date ? formateIndDate(new Date(`${date}T00:00:00`)) : "-"}</span>
+                    <span className="font-mono text-xs sm:text-sm">
+                      {date ? formateIndDate(new Date(`${date}T00:00:00`)) : "-"}
+                    </span>
                     <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="start" className="w-auto overflow-hidden p-0">
+                <PopoverContent align="start" className="w-auto overflow-hidden p-0 rounded-xl border-border shadow-lg">
                   <Calendar
                     mode="single"
                     selected={date ? new Date(`${date}T00:00:00`) : undefined}
@@ -481,19 +497,34 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-                Commodity Type
+              <Label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                {commodityType === "WHEAT" ? (
+                  <Wheat className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <Sprout className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                )}
+                <span>Commodity Type</span>
               </Label>
               <Select
                 value={commodityType}
                 onValueChange={(val: "WHEAT" | "MUSTARD") => setCommodityType(val)}
               >
-                <SelectTrigger className="w-full font-bold h-11 rounded-xl">
+                <SelectTrigger className="w-full font-bold h-11 rounded-xl border-input bg-background shadow-2xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WHEAT" className="font-medium">Wheat (गेहूं)</SelectItem>
-                  <SelectItem value="MUSTARD" className="font-medium">Mustard (सरसों)</SelectItem>
+                <SelectContent className="rounded-xl border-border shadow-lg">
+                  <SelectItem value="WHEAT" className="font-medium cursor-pointer">
+                    <span className="flex items-center gap-2">
+                      <Wheat className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Wheat (गेहूं)</span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="MUSTARD" className="font-medium cursor-pointer">
+                    <span className="flex items-center gap-2">
+                      <Sprout className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Mustard (सरसों)</span>
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -502,7 +533,7 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
           {/* Drop zone container */}
           <div className="w-full flex flex-col gap-4">
             {imagePreviewUrl ? (
-              <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-8 w-full flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group min-h-[220px]">
+              <div className="border-2 border-dashed border-primary/40 hover:border-primary bg-primary/5 dark:bg-primary/5 rounded-2xl p-6 sm:p-8 w-full flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group min-h-[220px]">
                 <input
                   type="file"
                   accept="image/*"
@@ -513,37 +544,37 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                   <img
                     src={imagePreviewUrl}
                     alt="Register sheet preview"
-                    className="max-h-64 rounded-xl shadow-md object-contain border border-border"
+                    className="max-h-64 rounded-xl shadow-md object-contain border border-border/80"
                   />
-                  <span className="text-xs text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border">
+                  <span className="text-xs text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border border-border shadow-2xs">
                     {imageFile?.name} ({Math.round((imageFile?.size || 0) / 1024)} KB)
                   </span>
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
-                    Click to replace image
+                  <span className="text-xs text-primary font-bold hover:underline">
+                    Click or drop another file to replace image
                   </span>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[220px]">
-                <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full">
+                <div className="border-2 border-dashed border-border/80 hover:border-primary/60 bg-secondary/15 hover:bg-secondary/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full shadow-2xs">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  <div className="p-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform mb-3">
-                    <Upload className="w-8 h-8" />
+                  <div className="p-3.5 rounded-xl bg-primary/10 text-primary group-hover:scale-105 group-hover:bg-primary/15 transition-all mb-2.5 border border-primary/20">
+                    <Upload className="w-7 h-7" />
                   </div>
-                  <p className="font-bold text-base text-foreground">
+                  <p className="font-bold text-sm sm:text-base text-foreground">
                     Upload from Gallery
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Drag & drop or click to browse
+                    Drag & drop or browse photos
                   </p>
                 </div>
-                
-                <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full">
+
+                <div className="border-2 border-dashed border-border/80 hover:border-primary/60 bg-secondary/15 hover:bg-secondary/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative group h-full shadow-2xs">
                   <input
                     type="file"
                     accept="image/*"
@@ -551,14 +582,14 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
                     onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  <div className="p-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform mb-3">
-                    <Camera className="w-8 h-8" />
+                  <div className="p-3.5 rounded-xl bg-primary/10 text-primary group-hover:scale-105 group-hover:bg-primary/15 transition-all mb-2.5 border border-primary/20">
+                    <Camera className="w-7 h-7" />
                   </div>
-                  <p className="font-bold text-base text-foreground">
+                  <p className="font-bold text-sm sm:text-base text-foreground">
                     Take a Photo
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Use your device camera
+                    Capture register sheet with camera
                   </p>
                 </div>
               </div>
@@ -571,18 +602,18 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
               type="button"
               variant="outline"
               onClick={handleAttemptCancel}
-              className="h-12 text-base px-6 rounded-xl font-semibold w-full sm:w-auto"
+              className="h-11 text-sm px-6 rounded-xl font-semibold w-full sm:w-auto border-border/80 hover:bg-secondary/60 cursor-pointer active:scale-[0.98]"
             >
               Cancel
             </Button>
             <Button
               onClick={handleRunOcr}
               disabled={!imageFile || isExtracting}
-              className="w-full sm:flex-1 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-bold h-12 rounded-xl text-sm sm:text-base shadow-lg shadow-amber-500/20 gap-2"
+              className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl text-sm shadow-[var(--button-primary-shadow)] active:scale-[0.98] gap-2 cursor-pointer disabled:opacity-50"
             >
-              <Sparkles className="w-5 h-5" />
-              <span className="hidden sm:inline">Convert Image to Grinding Ledger JSON</span>
-              <span className="sm:hidden">Convert to JSON</span>
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Convert Image to Grinding Ledger Records</span>
+              <span className="sm:hidden">Extract Records</span>
             </Button>
           </div>
         </div>
@@ -678,15 +709,15 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             {/* ── Desktop Table ──────────────────────────────────────────── */}
             <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto p-2 max-h-[615px]">
               <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/40 font-bold text-muted-foreground">
-                    <th className="p-2 w-12 text-center">S.No</th>
-                    <th className="p-2">English Name</th>
-                    <th className="p-2">Hindi Name</th>
-                    <th className="p-2 min-w-[180px]">Village (En / Hi)</th>
-                    <th className="p-2 w-20 text-right">Weight</th>
-                    <th className="p-2 w-16 text-center">Conf</th>
-                    <th className="p-2 w-10 text-center">Del</th>
+                <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-md border-b border-border/80 text-muted-foreground text-[11px] uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="p-2.5 w-12 text-center">#</th>
+                    <th className="p-2.5">Customer (EN)</th>
+                    <th className="p-2.5">Customer (HI)</th>
+                    <th className="p-2.5 min-w-[180px]">Village (EN / HI)</th>
+                    <th className="p-2.5 w-24 text-right">Weight</th>
+                    <th className="p-2.5 w-20 text-center">Confidence</th>
+                    <th className="p-2.5 w-14 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
@@ -812,31 +843,36 @@ const GrindingLedgerOcrStudio: React.FC<GrindingLedgerOcrStudioProps> = ({
             </div>
 
             {/* Save Footer */}
-            <div className="p-4 border-t bg-muted/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="p-3.5 sm:p-4 border-t border-border/60 bg-secondary/30 dark:bg-secondary/15 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="text-xs text-muted-foreground">
                 Ready to insert{" "}
                 <span className="font-bold text-foreground">{records.length} records</span>{" "}
-                for <span className="font-bold text-amber-600">{commodityType}</span> on{" "}
+                for <span className="font-bold text-primary">{commodityType}</span> on{" "}
                 <span className="font-bold text-foreground">{date}</span>.
               </div>
               <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2">
-                <Button variant="outline" onClick={handleAttemptCancel} disabled={isSaving} className="h-10 px-4 rounded-xl font-semibold">
+                <Button
+                  variant="outline"
+                  onClick={handleAttemptCancel}
+                  disabled={isSaving}
+                  className="h-10 px-4 rounded-xl font-semibold border-border/80 hover:bg-secondary/60 cursor-pointer"
+                >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSaveBulk}
                   disabled={isSaving || records.length === 0}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold h-10 px-5 rounded-xl shadow gap-1.5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 px-5 rounded-xl shadow-[var(--button-primary-shadow)] active:scale-[0.98] gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Inserting...
+                      <span>Saving Records...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      Save {records.length} Records
+                      <span>Save {records.length} Records</span>
                     </>
                   )}
                 </Button>

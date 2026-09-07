@@ -54,6 +54,7 @@ interface DashboardChartsProps {
   creditData: MonthlyMillCredit[];
   debitMillData: MonthlyMillDebit[];
   debitHomeData: MonthlyHomeDebit[];
+  isSensitive?: boolean;
 }
 
 const CHART_COLORS = {
@@ -75,11 +76,16 @@ const AXIS_STYLE = {
   fill: "#888888",
 };
 
+interface OverviewTooltipProps extends TooltipProps<ValueType, NameType> {
+  isSensitive?: boolean;
+}
+
 const OverviewTooltip = ({
   active,
   payload,
   label,
-}: TooltipProps<ValueType, NameType>) => {
+  isSensitive = false,
+}: OverviewTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-3 text-xs shadow-2xl animate-in fade-in-0 zoom-in-95 min-w-56">
@@ -102,7 +108,7 @@ const OverviewTooltip = ({
                 </span>
               </div>
               <span className="font-mono font-bold text-foreground">
-                {formatRs(Number(entry.value))}
+                {isSensitive ? "₹••••••" : `₹${formatRs(Number(entry.value))}`}
               </span>
             </div>
           ))}
@@ -117,6 +123,7 @@ export const DashboardCharts = ({
   creditData,
   debitMillData,
   debitHomeData,
+  isSensitive = false,
 }: DashboardChartsProps) => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -186,7 +193,9 @@ export const DashboardCharts = ({
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span className="text-muted-foreground">Best Month:</span>
               <span className="font-bold text-foreground">{peakMonth.month}</span>
-              <span className="font-mono font-bold text-primary">({formatRs(peakMonth.Income)})</span>
+              <span className="font-mono font-bold text-primary">
+                ({isSensitive ? "₹••••••" : `₹${formatRs(peakMonth.Income)}`})
+              </span>
             </div>
           )}
         </CardHeader>
@@ -254,12 +263,19 @@ export const DashboardCharts = ({
                   tickMargin={4}
                   textAnchor="end"
                   tick={axisTickStyle}
-                  tickFormatter={(val) => val >= 100000 ? `₹${(val / 100000).toFixed(1)}L` : val >= 1000 ? `₹${Math.round(val / 1000)}k` : `₹${val}`}
+                  tickFormatter={(val) => {
+                    if (isSensitive) return "••••";
+                    return val >= 100000
+                      ? `₹${(val / 100000).toFixed(1)}L`
+                      : val >= 1000
+                      ? `₹${Math.round(val / 1000)}k`
+                      : `₹${val}`;
+                  }}
                   width={52}
                 />
 
                 <Tooltip
-                  content={<OverviewTooltip />}
+                  content={<OverviewTooltip isSensitive={isSensitive} />}
                   cursor={{ fill: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(39, 35, 32, 0.04)", rx: 6, ry: 6 }}
                 />
 
@@ -350,6 +366,7 @@ export const DashboardCharts = ({
               data={creditData}
               dataKey="flourRs"
               color={CHART_COLORS.flour}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -358,6 +375,7 @@ export const DashboardCharts = ({
               data={creditData}
               dataKey="oilRs"
               color={CHART_COLORS.oil}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -366,6 +384,7 @@ export const DashboardCharts = ({
               data={creditData}
               dataKey="khariRs"
               color={CHART_COLORS.khari}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -374,6 +393,7 @@ export const DashboardCharts = ({
               data={creditData}
               dataKey="millCredit"
               color={CHART_COLORS.millCr}
+              isSensitive={isSensitive}
             />
           </div>
         </TabsContent>
@@ -387,6 +407,7 @@ export const DashboardCharts = ({
               data={debitMillData}
               dataKey="gehumRs"
               color={CHART_COLORS.wheat}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -395,6 +416,7 @@ export const DashboardCharts = ({
               data={debitMillData}
               dataKey="sarsoRs"
               color={CHART_COLORS.mustard}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -403,6 +425,7 @@ export const DashboardCharts = ({
               data={debitMillData}
               dataKey="millDebit"
               color={CHART_COLORS.millDr}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -411,6 +434,7 @@ export const DashboardCharts = ({
               data={debitMillData}
               dataKey="staff1Cost"
               color={CHART_COLORS.bhim}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -419,6 +443,7 @@ export const DashboardCharts = ({
               data={debitMillData}
               dataKey="staff2Cost"
               color={CHART_COLORS.viswa}
+              isSensitive={isSensitive}
             />
 
             <MetricChartCard
@@ -427,6 +452,7 @@ export const DashboardCharts = ({
               data={debitHomeData}
               dataKey="homeDebit"
               color={CHART_COLORS.lossBar}
+              isSensitive={isSensitive}
             />
           </div>
         </TabsContent>

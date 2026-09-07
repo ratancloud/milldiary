@@ -177,23 +177,32 @@ function MillDataContent() {
           { label: `${formateIndDate(new Date(`${year}-${month}-01`)).slice(2)}` }
         ]}
         actions={
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsSensitive((v) => !v)}
-            title={isSensitive ? "Show monetary values" : "Mask sensitive values"}
-            className={cn(
-              "h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 transition-all active:scale-95 shrink-0",
-              isSensitive && "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
-            )}
-            aria-label={isSensitive ? "Show monetary values" : "Mask sensitive values"}
-          >
-            {isSensitive ? (
-              <EyeOff className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            ) : (
-              <Eye className="h-4 w-4 text-primary" />
-            )}
-          </Button>
+          <>
+            <Button
+              type="button"
+              onClick={() => router.push("/mill-data/create")}
+              className="gap-1.5 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_2px_12px_rgba(166,83,46,0.28)] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 shrink-0 stroke-[2.5]" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSensitive((v) => !v)}
+              title={isSensitive ? "Show monetary values" : "Mask sensitive values"}
+              className={cn(
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 transition-all active:scale-95 shrink-0",
+                isSensitive && "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+              )}
+              aria-label={isSensitive ? "Show monetary values" : "Mask sensitive values"}
+            >
+              {isSensitive ? (
+                <EyeOff className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              ) : (
+                <Eye className="h-4 w-4 text-primary" />
+              )}
+            </Button>
+          </>
         }
       />
 
@@ -284,7 +293,7 @@ function MillDataContent() {
         </div>
 
         {/* actual table  */}
-        <div className="overflow-x-auto">
+        <div className="w-full">
           <TableComponent
             loading={loading}
             isPending={isSessionPending}
