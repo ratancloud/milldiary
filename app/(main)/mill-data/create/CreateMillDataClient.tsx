@@ -1,8 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import {
+  CalendarIcon,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  Wheat,
+  Droplets,
+} from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -20,7 +29,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { formateIndDate, formatRs } from "@/lib/helper";
+import { formateIndDate, formatRs, formatKg } from "@/lib/helper";
 import { Section } from "@/components/millDataForm/Section";
 import { NumberInput } from "@/components/millDataForm/NumberInput";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -33,8 +42,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { useState } from "react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function CreateMillDataClient() {
   const [open, setOpen] = useState(false);
@@ -68,34 +86,49 @@ export default function CreateMillDataClient() {
 
       staff1Rs: 0,
       staff2Rs: 0,
+      staffDescription: "",
       millDebit: 0,
+      millDescription: "",
       homeDebit: 0,
+      homeDescription: "",
     },
   });
 
-  // Safe field watching (compiler-safe) --->
+  // Watch field values for dynamic reactive calculations
   const [
     millCredit,
+    flourWeight,
     flourRs,
+    oilWeight,
     oilRs,
+    khariWeight,
     khariRs,
+    sarsoWeight,
     sarsoRs,
+    gehumWeight,
     gehumRs,
     staff1Rs,
     staff2Rs,
+    staffDescription,
     millDebit,
     homeDebit,
   ] = useWatch({
     control,
     name: [
       "millCredit",
+      "flourWeight",
       "flourRs",
+      "oilWeight",
       "oilRs",
+      "khariWeight",
       "khariRs",
+      "sarsoWeight",
       "sarsoRs",
+      "gehumWeight",
       "gehumRs",
       "staff1Rs",
       "staff2Rs",
+      "staffDescription",
       "millDebit",
       "homeDebit",
     ],
@@ -117,6 +150,9 @@ export default function CreateMillDataClient() {
     (staff2Rs ?? 0) +
     (millDebit ?? 0) +
     (homeDebit ?? 0);
+
+  const netBalance = totalCredit - totalDebit;
+  const isNetPositive = netBalance >= 0;
 
   /* -------------------------------- Submit -------------------------------- */
 
@@ -150,7 +186,7 @@ export default function CreateMillDataClient() {
         return;
       }
 
-      toast.success("Entry created successfully");
+      toast.success("Mill entry created successfully!");
       router.push("/mill-data");
       router.refresh();
     } catch {
@@ -160,9 +196,11 @@ export default function CreateMillDataClient() {
 
   const onInvalid = () => {
     const firstError = Object.keys(errors)[0];
-    document
-      .getElementById(firstError)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (firstError) {
+      document
+        .getElementById(firstError)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   /* -------------------------------- UI -------------------------------- */
@@ -188,7 +226,7 @@ export default function CreateMillDataClient() {
               </button>
             </PopoverTrigger>
 
-            <PopoverContent align="end" className="w-auto overflow-hidden p-0">
+            <PopoverContent align="end" className="w-auto overflow-hidden p-0 rounded-2xl border-border shadow-xl">
               <Calendar
                 mode="single"
                 selected={
@@ -212,15 +250,33 @@ export default function CreateMillDataClient() {
         }
       />
 
-      <Card>
-        <CardContent className="space-y-10 pt-6">
-          <Section title="Credits">
-            <NumberInput label="Mill Credit" error={errors.millCredit}>
-              <Input
-                id="millCredit"
-                type="number"
-                {...register("millCredit", { valueAsNumber: true })}
-              />
+      <Card className="rounded-2xl border border-border/80 dark:border-white/10 shadow-[var(--card-shadow)] overflow-hidden">
+        <CardContent className="space-y-8 px-4 sm:px-6">
+          {/* Section 1: Credits */}
+          <Section
+            title="Credits"
+            icon={TrendingUp}
+            badge={
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                Total Inflow: ₹{formatRs(totalCredit)}
+              </span>
+            }
+          >
+            <NumberInput label="Mill Credit (Rs)" error={errors.millCredit}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="millCredit"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("millCredit", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
             <KgRs
@@ -246,7 +302,16 @@ export default function CreateMillDataClient() {
             />
           </Section>
 
-          <Section title="Debits">
+          {/* Section 2: Debits */}
+          <Section
+            title="Debits"
+            icon={TrendingDown}
+            badge={
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 font-mono">
+                Total Outflow: ₹{formatRs(totalDebit)}
+              </span>
+            }
+          >
             <KgRs
               label="Sarso"
               kg="sarsoWeight"
@@ -262,79 +327,158 @@ export default function CreateMillDataClient() {
               errors={errors}
             />
 
-            <NumberInput label="Bhim Rs" error={errors.staff1Rs}>
-              <Input
-                id="staff1Rs"
-                type="number"
-                {...register("staff1Rs", { valueAsNumber: true })}
-              />
+            <NumberInput label="Bhim (Rs)" error={errors.staff1Rs}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="staff1Rs"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("staff1Rs", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
-            <NumberInput label="Viswa Rs" error={errors.staff2Rs}>
-              <Input
-                id="staff2Rs"
-                type="number"
-                {...register("staff2Rs", { valueAsNumber: true })}
-              />
+            <NumberInput label="Viswa (Rs)" error={errors.staff2Rs}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="staff2Rs"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("staff2Rs", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-sm font-medium">Staff Selection</label>
-              <Select onValueChange={(v) => setValue("staffDescription", v)}>
-                <SelectTrigger id="staffDescription" className="w-full">
-                  <SelectValue placeholder="Select staff" />
+            <div className="space-y-1.5 md:col-span-2" id="staffDescription">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Staff Selection
+              </label>
+              <Select
+                value={staffDescription || ""}
+                onValueChange={(v) => setValue("staffDescription", v, { shouldDirty: true })}
+              >
+                <SelectTrigger className="w-full h-10 rounded-lg bg-background border-input font-medium">
+                  <SelectValue placeholder="Select staff on duty" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl border-border">
                   <SelectItem value="bhim">Bhim</SelectItem>
                   <SelectItem value="viswa">Viswa</SelectItem>
                   <SelectItem value="bhim+viswa">Bhim + Viswa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-1 md:col-span-2">
-              <NumberInput label="Mill Debit" error={errors.millDebit}>
-                <Input
-                  id="millDebit"
-                  type="number"
-                  {...register("millDebit", { valueAsNumber: true })}
-                />
+              <NumberInput label="Mill Debit (Rs)" error={errors.millDebit}>
+                <div className="relative flex items-center">
+                  <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                    ₹
+                  </span>
+                  <Input
+                    id="millDebit"
+                    type="number"
+                    step="any"
+                    placeholder="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    {...register("millDebit", { valueAsNumber: true })}
+                    className="pl-7 font-medium tabular-nums"
+                  />
+                </div>
               </NumberInput>
             </div>
 
             <TextareaBlock label="Mill Description">
-              <Textarea id="millDescription" {...register("millDescription")} />
+              <Textarea
+                id="millDescription"
+                placeholder="e.g. Belt repair, machine oil, electricity bill, diesel..."
+                className="min-h-18 rounded-lg bg-background text-xs resize-none"
+                {...register("millDescription")}
+              />
             </TextareaBlock>
+
             <div className="space-y-1 md:col-span-2">
-              <NumberInput label="Home Debit" error={errors.homeDebit}>
-                <Input
-                  id="homeDebit"
-                  type="number"
-                  {...register("homeDebit", { valueAsNumber: true })}
-                />
+              <NumberInput label="Home Debit (Rs)" error={errors.homeDebit}>
+                <div className="relative flex items-center">
+                  <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                    ₹
+                  </span>
+                  <Input
+                    id="homeDebit"
+                    type="number"
+                    step="any"
+                    placeholder="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    {...register("homeDebit", { valueAsNumber: true })}
+                    className="pl-7 font-medium tabular-nums"
+                  />
+                </div>
               </NumberInput>
             </div>
 
             <TextareaBlock label="Home Description">
-              <Textarea id="homeDescription" {...register("homeDescription")} />
+              <Textarea
+                id="homeDescription"
+                placeholder="e.g. Household groceries, family expense, personal cash..."
+                className="min-h-18 rounded-lg bg-background text-xs resize-none"
+                {...register("homeDescription")}
+              />
             </TextareaBlock>
           </Section>
 
-          <Section title="Summary">
-            <ReadOnly label="Total Credit" value={formatRs(totalCredit)} />
-            <ReadOnly label="Total Debit" value={formatRs(totalDebit)} />
+          {/* Section 3: Summary */}
+          <Section
+            title="Summary"
+            icon={Scale}
+            badge={
+              <span
+                className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md border ${isNetPositive
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                  : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                  }`}
+              >
+                Net: {isNetPositive ? "+" : "-"}₹{formatRs(Math.abs(netBalance))}
+              </span>
+            }
+          >
+            <ReadOnly
+              label="Total Credit"
+              value={formatRs(totalCredit)}
+            />
+            <ReadOnly
+              label="Total Debit"
+              value={formatRs(totalDebit)}
+            />
           </Section>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 border-border/70">
             <Button
               variant="outline"
               type="button"
               onClick={() => router.back()}
+              disabled={isSubmitting}
+              className="rounded-xl px-5 active:scale-[0.98]"
             >
               Cancel
             </Button>
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogTrigger asChild>
-                <Button disabled={isSubmitting}>
+                <Button
+                  disabled={isSubmitting}
+                  className="rounded-xl px-6 font-bold shadow-xs active:scale-[0.98] cursor-pointer"
+                >
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
@@ -342,28 +486,47 @@ export default function CreateMillDataClient() {
                 </Button>
               </AlertDialogTrigger>
 
-              <AlertDialogContent>
+              <AlertDialogContent className="rounded-2xl border-border">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Creation</AlertDialogTitle>
+                  <AlertDialogTitle>Confirm Mill Entry Creation</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to create this entry? Please review
-                    the details before proceeding.
+                    Are you sure you want to create this entry for{" "}
+                    <strong>{displayDate}</strong>? Please verify the summary
+                    figures below before confirming:
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
+                <div className="my-2 p-3.5 rounded-xl bg-muted/50 border border-border/60 text-xs space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Inflow (Credits):</span>
+                    <span className="font-semibold text-foreground">₹{formatRs(totalCredit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Outflow (Debits):</span>
+                    <span className="font-semibold text-foreground">₹{formatRs(totalDebit)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-1.5 border-t border-border/60">
+                    <span className="text-foreground">Net Margin:</span>
+                    <span className={isNetPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
+                      {isNetPositive ? "+" : "-"}₹{formatRs(Math.abs(netBalance))}
+                    </span>
+                  </div>
+                </div>
+
                 <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isSubmitting}>
+                  <AlertDialogCancel disabled={isSubmitting} className="rounded-xl">
                     Cancel
                   </AlertDialogCancel>
 
                   <AlertDialogAction
                     disabled={isSubmitting}
+                    className="rounded-xl font-bold"
                     onClick={() => {
                       setConfirmOpen(false);
                       handleSubmit(onSubmit, onInvalid)();
                     }}
                   >
-                    Yes, Create
+                    Yes, Create Entry
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

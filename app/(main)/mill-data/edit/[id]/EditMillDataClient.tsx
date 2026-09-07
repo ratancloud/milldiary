@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Calendar, Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import {
+  Calendar,
+  Lock,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  Wheat,
+  Droplets,
+} from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   updateMillDataFormSchema,
@@ -21,8 +30,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-
-import { formateIndDate, formatRs } from "@/lib/helper";
+import { formateIndDate, formatRs, formatKg } from "@/lib/helper";
 import EditMillDataSkeleton from "@/components/skelton/EditMillDataSkeleton";
 import { MillData } from "@/types/mill-data";
 import { Section } from "@/components/millDataForm/Section";
@@ -31,7 +39,17 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { KgRs } from "@/components/millDataForm/KgRs";
 import { TextareaBlock } from "@/components/millDataForm/TextareaBlock";
 import { ReadOnly } from "@/components/millDataForm/ReadOnly";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function EditMillDataClient() {
   const { id } = useParams<{ id: string }>();
@@ -42,16 +60,16 @@ export default function EditMillDataClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
     setValue,
-    watch,
     setError,
     formState: { isSubmitting, dirtyFields, errors },
   } = useForm<UpdateMillDataFormInput>({
     resolver: zodResolver(updateMillDataFormSchema),
-    shouldFocusError: true, // Native focus
+    shouldFocusError: true,
   });
 
   /* ----------------------------- Fetch Data ----------------------------- */
@@ -80,38 +98,61 @@ export default function EditMillDataClient() {
     fetchData();
   }, [id, reset, router]);
 
-  /* -------------------------- Optimized Watch ---------------------------- */
+  /* -------------------------- Real-time Watch ---------------------------- */
 
-  const watchedValues = watch([
-    "millCredit",
-    "flourRs",
-    "oilRs",
-    "khariRs",
-    "sarsoRs",
-    "gehumRs",
-    "staff1Rs",
-    "staff2Rs",
-    "millDebit",
-    "homeDebit",
-  ]);
+  const [
+    millCredit,
+    flourWeight,
+    flourRs,
+    oilWeight,
+    oilRs,
+    khariWeight,
+    khariRs,
+    sarsoWeight,
+    sarsoRs,
+    gehumWeight,
+    gehumRs,
+    staff1Rs,
+    staff2Rs,
+    staffDescription,
+    millDebit,
+    homeDebit,
+  ] = useWatch({
+    control,
+    name: [
+      "millCredit",
+      "flourWeight",
+      "flourRs",
+      "oilWeight",
+      "oilRs",
+      "khariWeight",
+      "khariRs",
+      "sarsoWeight",
+      "sarsoRs",
+      "gehumWeight",
+      "gehumRs",
+      "staff1Rs",
+      "staff2Rs",
+      "staffDescription",
+      "millDebit",
+      "homeDebit",
+    ],
+  });
 
-  const { totalCredit, totalDebit } = useMemo(() => {
-    const n = (v?: number) => v ?? 0;
-    return {
-      totalCredit:
-        n(watchedValues[0]) +
-        n(watchedValues[1]) +
-        n(watchedValues[2]) +
-        n(watchedValues[3]),
-      totalDebit:
-        n(watchedValues[4]) +
-        n(watchedValues[5]) +
-        n(watchedValues[6]) +
-        n(watchedValues[7]) +
-        n(watchedValues[8]) +
-        n(watchedValues[9]),
-    };
-  }, [watchedValues]);
+  const totalCredit =
+    (millCredit ?? 0) + (flourRs ?? 0) + (oilRs ?? 0) + (khariRs ?? 0);
+
+  const totalDebit =
+    (sarsoRs ?? 0) +
+    (gehumRs ?? 0) +
+    (staff1Rs ?? 0) +
+    (staff2Rs ?? 0) +
+    (millDebit ?? 0) +
+    (homeDebit ?? 0);
+
+  const netBalance = totalCredit - totalDebit;
+  const isNetPositive = netBalance >= 0;
+  const isDirty = Object.keys(dirtyFields).length > 0;
 
   /* ------------------------------ Submit ------------------------------- */
 
@@ -149,30 +190,30 @@ export default function EditMillDataClient() {
             }
           );
 
-          // --- AUTO SCROLL TO ERROR ---
           const firstErrorField = Object.keys(json.errors.properties)[0];
-          const element = document.getElementById(firstErrorField);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+          document
+            .getElementById(firstErrorField)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
         } else {
           toast.error(json.message || "Update failed");
         }
         return;
       }
 
-      toast.success("Updated successfully");
+      toast.success("Mill entry updated successfully!");
       router.back();
     } catch {
       toast.error("Failed to connect to server");
     }
   };
 
-  // Helper for scrolling on client-side validation errors
   const onInvalid = () => {
     const firstError = Object.keys(errors)[0];
-    const el = document.getElementById(firstError);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (firstError) {
+      document
+        .getElementById(firstError)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   if (loading) return <EditMillDataSkeleton />;
@@ -184,33 +225,38 @@ export default function EditMillDataClient() {
         backHref="/mill-data"
         items={[
           { label: "Mill Data", href: "/mill-data" },
-          { label: "Edit Entry" },
+          { label: "Edit" },
+          { label: `${date && formateIndDate(date)}` },
         ]}
-        actions={
-          date && (
-            <div
-              className="flex items-center gap-2"
-              onClick={() => toast.error("Date cannot be changed")}
-            >
-              <div className="h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-xl border border-border/80 bg-secondary/40 hover:bg-secondary/70 px-3 sm:px-3.5 text-xs font-semibold cursor-pointer transition-all shadow-xs">
-                <Calendar className="h-3.5 w-3.5 text-primary" />
-                <span className="tabular-nums font-mono">{formateIndDate(date)}</span>
-              </div>
-            </div>
-          )
-        }
       />
 
-      <Card>
-        <CardContent className="space-y-10 pt-6">
-          <Section title="Credits">
-            <NumberInput label="Mill Credit" error={errors.millCredit}>
-              <Input
-                id="millCredit" // ID for scrolling
-                type="number"
-                onWheel={(e) => e.currentTarget.blur()}
-                {...register("millCredit", { valueAsNumber: true })}
-              />
+      <Card className="rounded-2xl border border-border/80 dark:border-white/10 shadow-[var(--card-shadow)] overflow-hidden">
+        <CardContent className="space-y-8 px-4 sm:px-6">
+          {/* Section 1: Credits */}
+          <Section
+            title="Credits"
+            icon={TrendingUp}
+            badge={
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                Total Inflow: ₹{formatRs(totalCredit)}
+              </span>
+            }
+          >
+            <NumberInput label="Mill Credit (Rs)" error={errors.millCredit}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="millCredit"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("millCredit", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
             <KgRs
@@ -236,7 +282,16 @@ export default function EditMillDataClient() {
             />
           </Section>
 
-          <Section title="Debits">
+          {/* Section 2: Debits */}
+          <Section
+            title="Debits"
+            icon={TrendingDown}
+            badge={
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 font-mono">
+                Total Outflow: ₹{formatRs(totalDebit)}
+              </span>
+            }
+          >
             <KgRs
               label="Sarso"
               kg="sarsoWeight"
@@ -252,36 +307,52 @@ export default function EditMillDataClient() {
               errors={errors}
             />
 
-            <NumberInput label="Bhim Rs" error={errors.staff1Rs}>
-              <Input
-                id="staff1Rs"
-                type="number"
-                onWheel={(e) => e.currentTarget.blur()}
-                {...register("staff1Rs", { valueAsNumber: true })}
-              />
+            <NumberInput label="Bhim (Rs)" error={errors.staff1Rs}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="staff1Rs"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("staff1Rs", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
-            <NumberInput label="Viswa Rs" error={errors.staff2Rs}>
-              <Input
-                id="staff2Rs"
-                type="number"
-                onWheel={(e) => e.currentTarget.blur()}
-                {...register("staff2Rs", { valueAsNumber: true })}
-              />
+            <NumberInput label="Viswa (Rs)" error={errors.staff2Rs}>
+              <div className="relative flex items-center">
+                <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                  ₹
+                </span>
+                <Input
+                  id="staff2Rs"
+                  type="number"
+                  step="any"
+                  placeholder="0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  {...register("staff2Rs", { valueAsNumber: true })}
+                  className="pl-7 font-medium tabular-nums"
+                />
+              </div>
             </NumberInput>
 
-            <div className="space-y-1 md:col-span-2" id="staffDescription">
-              <label className="text-sm font-medium">Staff Selection</label>
+            <div className="space-y-1.5 md:col-span-2" id="staffDescription">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Staff Selection
+              </label>
               <Select
-                value={watch("staffDescription") || ""}
-                onValueChange={(v) =>
-                  setValue("staffDescription", v, { shouldDirty: true })
-                }
+                value={staffDescription || ""}
+                onValueChange={(v) => setValue("staffDescription", v, { shouldDirty: true })}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select staff" />
+                <SelectTrigger className="w-full h-10 rounded-lg bg-background border-input font-medium">
+                  <SelectValue placeholder="Select staff on duty" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl border-border">
                   <SelectItem value="bhim">Bhim</SelectItem>
                   <SelectItem value="viswa">Viswa</SelectItem>
                   <SelectItem value="bhim+viswa">Bhim + Viswa</SelectItem>
@@ -290,51 +361,103 @@ export default function EditMillDataClient() {
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <NumberInput label="Mill Debit" error={errors.millDebit}>
-                <Input
-                  id="millDebit"
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  {...register("millDebit", { valueAsNumber: true })}
-                />
+              <NumberInput label="Mill Debit (Rs)" error={errors.millDebit}>
+                <div className="relative flex items-center">
+                  <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                    ₹
+                  </span>
+                  <Input
+                    id="millDebit"
+                    type="number"
+                    step="any"
+                    placeholder="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    {...register("millDebit", { valueAsNumber: true })}
+                    className="pl-7 font-medium tabular-nums"
+                  />
+                </div>
               </NumberInput>
             </div>
 
             <TextareaBlock label="Mill Description">
-              <Textarea id="millDescription" {...register("millDescription")} />
+              <Textarea
+                id="millDescription"
+                placeholder="e.g. Belt repair, machine oil, electricity bill, diesel..."
+                className="min-h-18 rounded-lg bg-background text-xs resize-none"
+                {...register("millDescription")}
+              />
             </TextareaBlock>
 
             <div className="space-y-1 md:col-span-2">
-              <NumberInput label="Home Debit" error={errors.homeDebit}>
-                <Input
-                  id="homeDebit"
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  {...register("homeDebit", { valueAsNumber: true })}
-                />
+              <NumberInput label="Home Debit (Rs)" error={errors.homeDebit}>
+                <div className="relative flex items-center">
+                  <span className="absolute left-2.5 text-xs text-muted-foreground font-semibold pointer-events-none select-none">
+                    ₹
+                  </span>
+                  <Input
+                    id="homeDebit"
+                    type="number"
+                    step="any"
+                    placeholder="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    {...register("homeDebit", { valueAsNumber: true })}
+                    className="pl-7 font-medium tabular-nums"
+                  />
+                </div>
               </NumberInput>
             </div>
 
             <TextareaBlock label="Home Description">
-              <Textarea id="homeDescription" {...register("homeDescription")} />
+              <Textarea
+                id="homeDescription"
+                placeholder="e.g. Household groceries, family expense, personal cash..."
+                className="min-h-18 rounded-lg bg-background text-xs resize-none"
+                {...register("homeDescription")}
+              />
             </TextareaBlock>
           </Section>
 
-          <Section title="Summary">
-            <ReadOnly label="Total Credit" value={formatRs(totalCredit)} />
-            <ReadOnly label="Total Debit" value={formatRs(totalDebit)} />
+          {/* Section 3: Summary */}
+          <Section
+            title="Summary"
+            icon={Scale}
+            badge={
+              <span
+                className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md border ${isNetPositive
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                  : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                  }`}
+              >
+                Net: {isNetPositive ? "+" : "-"}₹{formatRs(Math.abs(netBalance))}
+              </span>
+            }
+          >
+            <ReadOnly
+              label="Total Credit"
+              value={formatRs(totalCredit)}
+            />
+            <ReadOnly
+              label="Total Debit"
+              value={formatRs(totalDebit)}
+            />
           </Section>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={() => router.back()}>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 border-border/70">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => router.back()}
+              disabled={isSubmitting}
+              className="rounded-xl px-5 active:scale-[0.98]"
+            >
               Cancel
             </Button>
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogTrigger asChild>
                 <Button
-                  disabled={
-                    isSubmitting || Object.keys(dirtyFields).length === 0
-                  }
+                  disabled={isSubmitting || !isDirty}
+                  className="rounded-xl px-6 font-bold shadow-xs active:scale-[0.98] cursor-pointer"
                 >
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -343,27 +466,46 @@ export default function EditMillDataClient() {
                 </Button>
               </AlertDialogTrigger>
 
-              <AlertDialogContent>
+              <AlertDialogContent className="rounded-2xl border-border">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Update</AlertDialogTitle>
+                  <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to save these changes? This action
-                    cannot be undone.
+                    Are you sure you want to save modifications to this entry for{" "}
+                    <strong>{date ? formateIndDate(date) : "this record"}</strong>?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
+                <div className="my-2 p-3.5 rounded-xl bg-muted/50 border border-border/60 text-xs space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Inflow (Credits):</span>
+                    <span className="font-semibold text-foreground">₹{formatRs(totalCredit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Outflow (Debits):</span>
+                    <span className="font-semibold text-foreground">₹{formatRs(totalDebit)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-1.5 border-t border-border/60">
+                    <span className="text-foreground">Net Margin:</span>
+                    <span className={isNetPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
+                      {isNetPositive ? "+" : "-"}₹{formatRs(Math.abs(netBalance))}
+                    </span>
+                  </div>
+                </div>
+
                 <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isSubmitting}>
+                  <AlertDialogCancel disabled={isSubmitting} className="rounded-xl">
                     Cancel
                   </AlertDialogCancel>
+
                   <AlertDialogAction
                     disabled={isSubmitting}
+                    className="rounded-xl font-bold"
                     onClick={() => {
                       setConfirmOpen(false);
                       handleSubmit(onSubmit, onInvalid)();
                     }}
                   >
-                    Yes, Save
+                    Yes, Save Changes
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

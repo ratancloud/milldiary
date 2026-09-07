@@ -134,12 +134,7 @@ export const MetricChartCard = <T extends ChartDataPoint>({
 
   return (
     <Card
-      className="flex flex-col h-full rounded-2xl border border-border/80 dark:border-white/[0.08] shadow-[var(--card-shadow)] hover:shadow-[var(--card-hover-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 overflow-hidden group"
-      style={{
-        background: isDark
-          ? `radial-gradient(ellipse 70% 50% at 50% 0%, ${resolvedColor}16 0%, transparent 80%), hsl(var(--card))`
-          : `radial-gradient(ellipse 70% 50% at 50% 0%, ${resolvedColor}08 0%, transparent 80%), hsl(var(--card))`,
-      }}
+      className="flex flex-col h-full rounded-2xl border border-border/80 dark:border-white/10 bg-card text-card-foreground shadow-[var(--card-shadow)] hover:shadow-[var(--card-hover-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 overflow-hidden group"
     >
       {/* Seamless Single-Surface Header */}
       <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 sm:p-5 pb-1 sm:pb-2">
@@ -164,8 +159,8 @@ export const MetricChartCard = <T extends ChartDataPoint>({
               {isSensitive && unit === "₹"
                 ? "••••••"
                 : unit === "₹"
-                ? formatRs(totalValue)
-                : `${totalValue.toLocaleString("en-IN")} ${unit}`}
+                  ? formatRs(totalValue)
+                  : `${totalValue.toLocaleString("en-IN")} ${unit}`}
             </span>
           </div>
 
@@ -338,7 +333,7 @@ const BreakdownTooltip = ({
         : `${valueNum.toLocaleString("en-IN")} ${unit}`;
 
     return (
-      <div className="rounded-xl border border-border/80 dark:border-white/15 bg-popover/95 dark:bg-[#1b1c1e]/95 backdrop-blur-md px-3.5 py-2.5 text-xs shadow-xl dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)] animate-in fade-in-0 zoom-in-95 min-w-[210px]">
+      <div className="rounded-xl border border-border/80 dark:border-white/15 bg-card/95 backdrop-blur-md px-3.5 py-2.5 text-xs text-card-foreground shadow-xl dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)] animate-in fade-in-0 zoom-in-95 min-w-[210px]">
         {/* Month & Seasonal Share Header */}
         <div className="flex items-center justify-between border-b border-border/60 dark:border-white/10 pb-1.5 mb-2 gap-2">
           <div className="flex items-center gap-1.5">

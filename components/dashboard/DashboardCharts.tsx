@@ -88,7 +88,7 @@ const OverviewTooltip = ({
 }: OverviewTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-3 text-xs shadow-2xl animate-in fade-in-0 zoom-in-95 min-w-56">
+      <div className="rounded-xl border border-border/80 dark:border-white/15 bg-card/95 backdrop-blur-md px-4 py-3 text-xs text-card-foreground shadow-2xl animate-in fade-in-0 zoom-in-95 min-w-56">
         <p className="font-bold text-foreground border-b border-border/50 pb-2 mb-2">
           {label}
         </p>
@@ -172,7 +172,7 @@ export const DashboardCharts = ({
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
       {/* --- Chart 1: Financial Trajectory Overview --- */}
-      <Card className="rounded-2xl border border-border/70 dark:border-white/[0.08] bg-card shadow-[var(--card-shadow)] overflow-hidden">
+      <Card className="rounded-2xl border border-border/80 dark:border-white/10 bg-card text-card-foreground shadow-[var(--card-shadow)] overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 sm:p-6 pb-2">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
@@ -317,7 +317,7 @@ export const DashboardCharts = ({
                     r: 4,
                     fill: dynamicColors.incomeLine,
                     strokeWidth: 2,
-                    stroke: "hsl(var(--background))",
+                    stroke: "var(--card)",
                   }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />

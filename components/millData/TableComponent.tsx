@@ -273,12 +273,10 @@ const TableComponent: React.FC<TableProps> = ({ loading, isPending, filteredRows
                   <TableCell className={cn(baseCell, "min-w-[135px]")}>
                     <Link
                       href={`/mill-data/edit/${row.id}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-stone-950 shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                       title="Click to edit entry"
                     >
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
                       <span>{formateIndDate(row.date)}</span>
-                      <Pencil className="h-2.5 w-2.5 shrink-0 opacity-80" />
                     </Link>
                   </TableCell>
 

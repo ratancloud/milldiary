@@ -79,7 +79,7 @@ export default function MobileBottomNav() {
   const isDashboardActive = pathname === "/dashboard";
   const isMillDataActive = pathname.startsWith("/mill-data");
   const isAddLedgerActive = pathname === "/grinding-ledger/new";
-  const isLedgerActive = pathname.startsWith("/grinding-ledger");
+  const isLedgerActive = pathname === "/grinding-ledger";
   const isProfileActive = pathname.startsWith("/profile");
   const isLoginActive = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
